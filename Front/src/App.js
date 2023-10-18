@@ -8,7 +8,12 @@ function App() {
       amount: 94.12,
       date: new Date(2020, 7, 14),
     },
-    { id: "e2", title: "New TV", amount: 799.49, date: new Date(2021, 2, 12) },
+    {
+      id: "e2",
+      title: "New TV",
+      amount: 799.49,
+      date: new Date(2021, 2, 12),
+    },
     {
       id: "e3",
       title: "Car Insurance",
@@ -46,6 +51,11 @@ function App() {
         amount={expenses[3].amount}
         date={expenses[3].date}
       ></ExpenseItem>
+
+      {/* // 한 개의 props로 전달도 가능
+      <ExpenseItem
+        expense = {expense[0]}
+      ></ExpenseItem> */}
     </div>
   );
 }
