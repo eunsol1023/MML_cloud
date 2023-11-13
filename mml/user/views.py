@@ -1,12 +1,19 @@
 # user/views.py
 
 from datetime import datetime
+import json
 from dateutil.relativedelta import relativedelta
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .serializers import MMLUserInfoSerializer
+from django.contrib.auth import authenticate, login
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, HttpResponseBadRequest
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny
 
 User = get_user_model()
 
@@ -37,3 +44,25 @@ def signup(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@authentication_classes([])  # CSRF 토큰 없이 인증 클래스를 비활성화합니다.
+@permission_classes([AllowAny])  # 모든 사용자의 접근을 허용합니다.
+def login_user(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return HttpResponseBadRequest('사용자 이름과 비밀번호를 모두 제공해야 합니다.')
+
+        # authenticate 함수에 request._request를 전달
+        user = authenticate(request._request, username=username, password=password)
+        if user is not None:
+            # login 함수에도 request._request를 전달
+            login(request._request, user)
+            return JsonResponse({'message': '로그인 성공'}, status=200)
+        else:
+            return JsonResponse({'error': '로그인 실패'}, status=401)
+    else:
+        return JsonResponse({'error': 'POST 요청이 아닙니다'}, status=400)
