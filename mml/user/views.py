@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -23,6 +24,7 @@ def signup(request):
     Create a new user instance.
     """
     data = request.data
+    print(data)
     age_range = None
 
     # age_range 필드가 None이 아닌 경우에 연령대로 변환
@@ -56,10 +58,10 @@ def login_user(request):
         if not username or not password:
             return HttpResponseBadRequest('사용자 이름과 비밀번호를 모두 제공해야 합니다.')
 
-        # authenticate 함수에 request._request를 전달
         user = authenticate(request._request, username=username, password=password)
         if user is not None:
-            # login 함수에도 request._request를 전달
+            user.last_login = timezone.now()  # last_login을 현재 시간으로 업데이트합니다.
+            user.save(update_fields=['last_login'])
             login(request._request, user)
             return JsonResponse({'message': '로그인 성공'}, status=200)
         else:
