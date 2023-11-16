@@ -24,12 +24,12 @@ def signup(request):
     Create a new user instance.
     """
     data = request.data
-    print(data)
-    age_range = None
 
     # age_range 필드가 None이 아닌 경우에 연령대로 변환
     if data.get('age_range'):
-        birthdate = datetime.strptime(data['age_range'], "%Y-%m-%d")
+        
+        birthdate = datetime.strptime((data['age_range']), "%Y-%m-%d")
+        print(type(birthdate))
         today = datetime.now()
         age = relativedelta(today, birthdate).years
         if 10 <= age < 20:
