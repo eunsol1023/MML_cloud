@@ -36,4 +36,13 @@ class MMLUserInfo(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
     
+class MMLUserGen(models.Model):
+    username = models.ForeignKey(MMLUserInfo, on_delete=models.CASCADE, related_name='music_preferences')
+    priority = models.IntegerField()
+    genre = models.CharField(max_length=100)
 
+    class Meta:
+        db_table = 'mml_user_gen'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.genre} - {self.priority}"

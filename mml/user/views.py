@@ -38,9 +38,14 @@ def signup(request):
             age_range = "20대"
         elif 30 <= age < 40:
             age_range = "30대"
+        elif 40 <= age < 50:
+            age_range = "40대"
+        elif 50 <= age < 60:
+            age_range = "50대"
+        elif 60 <= age <70:
+            age_range = "60대"
         else:
-            age_range = "기타"
-        # 여기서 원하는 연령대 조건을 추가로 처리할 수 있습니다.
+            age_range = "기타연령대"
 
     # 데이터를 저장할 때 age_range 필드에 연령대 값 설정
     data['age_range'] = age_range
@@ -58,7 +63,8 @@ def login_user(request):
     if request.method == 'POST':
         username = request.data.get('username')
         password = request.data.get('password')
-
+        print(username)
+        print(password)
         if not username or not password:
             return HttpResponseBadRequest('사용자 이름과 비밀번호를 모두 제공해야 합니다.')
 
