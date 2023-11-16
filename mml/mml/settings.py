@@ -115,6 +115,7 @@ USE_TZ = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React 개발 서버
     "http://52.79.149.203:3000",  # React 프로덕션 서버
+    "15.164.46.35:8000"
 ]
 
 # Static files (CSS, JavaScript, Images)
