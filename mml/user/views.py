@@ -36,6 +36,10 @@ def signup(request):
             age_range = "10대"
         elif 20 <= age < 30:
             age_range = "20대"
+        elif 30 <= age < 40:
+            age_range = "30대"
+        else:
+            age_range = "기타"
         # 여기서 원하는 연령대 조건을 추가로 처리할 수 있습니다.
 
     # 데이터를 저장할 때 age_range 필드에 연령대 값 설정
