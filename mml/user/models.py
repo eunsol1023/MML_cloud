@@ -37,7 +37,7 @@ class MMLUserInfo(AbstractBaseUser, PermissionsMixin):
         return self.username
     
 class MMLUserGen(models.Model):
-    username = models.ForeignKey(MMLUserInfo, on_delete=models.CASCADE, related_name='music_preferences')
+    user_info = models.ForeignKey(MMLUserInfo, on_delete=models.CASCADE, related_name='music_preferences')
     priority = models.IntegerField()
     genre = models.CharField(max_length=100)
 
@@ -45,4 +45,5 @@ class MMLUserGen(models.Model):
         db_table = 'mml_user_gen'
 
     def __str__(self):
-        return f"{self.user.username} - {self.genre} - {self.priority}"
+        # 수정된 필드 이름을 반영합니다.
+        return f"{self.user_info.username} - {self.genre} - {self.priority}"
