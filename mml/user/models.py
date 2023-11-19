@@ -58,18 +58,16 @@ class MMLUserGen(models.Model):
         return f"{self.username.username if self.username else 'None'} - {self.genre} - {self.priority}"
 
 class MMLArtistGen(models.Model):
-    id = models.AutoField(primary_key=True)
-    artist = models.CharField(max_length=100)
-    priority = models.IntegerField()
-    genre = models.CharField(max_length=100)
-    artist_processed = models.CharField(max_length=100)
+    artist = models.CharField(max_length=100, primary_key=True)
+    priority = models.IntegerField()  # 우선순위
+    genre = models.CharField(max_length=100)  # 장르
 
     class Meta:
         db_table = 'mml_artist_gen'
 
     def __str__(self):
         return f"{self.artist} - {self.genre}"
-    
+
 class MMLUserLikeArtist(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -79,6 +77,7 @@ class MMLUserLikeArtist(models.Model):
     )
     artist = models.ForeignKey(
         MMLArtistGen, 
+        to_field='artist',  # 'artist' 필드를 명시적으로 참조
         on_delete=models.CASCADE,
         db_column='artist_id'
     )
@@ -90,7 +89,57 @@ class MMLUserLikeArtist(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.artist.artist}"
-    
-    
 
+class MMLUserLikeMusic(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # MMLUserInfo 모델을 참조한다고 가정합니다.
+        to_field='username',
+        on_delete=models.CASCADE,
+        db_column='user_id'
+    )
+    title = models.CharField(max_length=255)
+    artist = models.CharField(max_length=100)
 
+    class Meta:
+        db_table = 'mml_user_like_music'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title} - {self.artist}"
+    
+class MMLMusicInfo(models.Model):
+    title = models.CharField(max_length=255)
+    artist = models.CharField(max_length=255)
+    genre = models.CharField(max_length=100)
+    lyrics = models.TextField()
+    album_image_url = models.URLField()
+
+    class Meta:
+        db_table = 'mml_music_info'
+        
+    def __str__(self):
+        return f"{self.title} - {self.artist}"    
+
+class MMLMusicTag(models.Model):
+    title = models.CharField(max_length=255)  # ForeignKey 대신 CharField 사용
+    artist = models.CharField(max_length=255)
+    tag = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'mml_music_tag'
+
+    def __str__(self):
+        return f"{self.title} - {self.tag}"
+    
+class MMLUserHis(models.Model):
+    user = models.CharField(max_length=150)  # ForeignKey 대신 CharField 사용
+    title = models.CharField(max_length=255)  # ForeignKey 대신 CharField 사용
+    artist = models.CharField(max_length=100)
+    genre = models.CharField(max_length=100)
+    playtime = models.IntegerField()
+    created_at = models.DateTimeField()
+
+    class Meta:
+        db_table = 'mml_user_his'
+
+    def __str__(self):
+        return f"{self.user} - {self.title} - {self.artist}"
