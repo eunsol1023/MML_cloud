@@ -139,6 +139,7 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = 'user.MMLUserInfo'
 
+SESSION_COOKIE_DOMAIN = None
 SESSION_COOKIE_SECURE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default
 SESSION_COOKIE_AGE = 600
