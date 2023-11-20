@@ -15,6 +15,8 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
+from django.contrib.auth import logout
+from django.http import JsonResponse
 
 User = get_user_model()
 
@@ -78,3 +80,8 @@ def login_user(request):
             return JsonResponse({'error': '로그인 실패'}, status=401)
     else:
         return JsonResponse({'error': 'POST 요청이 아닙니다'}, status=400)
+
+@api_view(['POST'])
+def logout_user(request):
+    logout(request)
+    return JsonResponse({'message': '로그아웃 성공'}, status=200)
