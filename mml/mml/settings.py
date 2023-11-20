@@ -133,10 +133,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSE' :[
-         'rest_framework.permissions.DjangoModelPermissionOrAnonReadOnly'
-  ]
+        'rest_framework.permissions.DjangoModelPermissionOrAnonReadOnly'
+    ]
 }
 
 AUTH_USER_MODEL = 'user.MMLUserInfo'
 
+SESSION_COOKIE_SECURE = False
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default
 SESSION_COOKIE_AGE = 600

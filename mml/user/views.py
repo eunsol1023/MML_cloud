@@ -59,7 +59,6 @@ def signup(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
-@authentication_classes([])  # CSRF 토큰 없이 인증 클래스를 비활성화합니다.
 @permission_classes([AllowAny])  # 모든 사용자의 접근을 허용합니다.
 def login_user(request):
     if request.method == 'POST':
