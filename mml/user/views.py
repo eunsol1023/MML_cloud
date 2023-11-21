@@ -72,6 +72,7 @@ def home(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def login_user(request):
     username = request.data.get('username')
     password = request.data.get('password')
