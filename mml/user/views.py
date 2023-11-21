@@ -68,10 +68,6 @@ def home(request):
         response = HttpResponse(f"사용자: {request.user.username}이 로그인했습니다")
     else:
         response = HttpResponse("로그인문제발생!")
-
-    # HttpResponse의 내용을 UTF-8 문자열로 디코딩하여 콘솔에 출력
-    print(response.content.decode('utf-8'))
-
     return response
 
 @api_view(['POST'])
@@ -99,7 +95,7 @@ def login_user(request):
 @api_view(['POST'])
 def logout_user(request):
     # Log the attempt to logout
-    logger.info(f"Attempting to log out user: {request.user}")
+    logger.info(f"Attempting to log out user: {request.user.username}")
 
     logout(request)
 
