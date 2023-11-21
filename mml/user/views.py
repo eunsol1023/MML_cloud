@@ -88,20 +88,25 @@ def login_user(request):
         home_response = home(request)
         print(home_response.content)  # This prints to the Django server console
         response = JsonResponse({'message': 'Login successful'}, status=200)
-        response.set_cookie('babo','jinsu', httponly=True, secure=False)
         return response
     else:
         return JsonResponse({'error': 'Login failed'}, status=401)
 
 @api_view(['POST'])
 def logout_user(request):
-    # Log the attempt to logout
+    # 현재 로그인된 사용자와 쿠키 정보 출력
     logger.info(f"Attempting to log out user: {request.user}")
     print(request.COOKIES)
+
+    # 사용자 로그아웃
     logout(request)
 
-    # Log the successful logout
+    # 쿠키 삭제 (세션 쿠키 이름 'sessionid' 사용)
+    response = JsonResponse({'message': 'Logout successful'})
+    response.delete_cookie('sessionid')
+
+    # 로그아웃 성공 메시지 로깅
     logger.info("Logout successful")
 
-    return JsonResponse({'message': 'Logout successful'}, status=200)
+    return response
 

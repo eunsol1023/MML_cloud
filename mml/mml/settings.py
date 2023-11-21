@@ -141,6 +141,8 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = 'user.MMLUserInfo'
 
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_DOMAIN = '.cloudmml.com'
 SESSION_COOKIE_SECURE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default
 SESSION_COOKIE_AGE = 180		# 세션쿠키의 유효기간 설정(default: 2주)
