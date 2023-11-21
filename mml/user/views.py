@@ -87,8 +87,9 @@ def login_user(request):
         # Call the home function and print its response
         home_response = home(request)
         print(home_response.content)  # This prints to the Django server console
-
-        return JsonResponse({'message': 'Login successful'}, status=200)
+        response = JsonResponse({'message': 'Login successful'}, status=200)
+        response.set_cookie('babo','jinsu', httponly=True, secure=False)
+        return response
     else:
         return JsonResponse({'error': 'Login failed'}, status=401)
 
