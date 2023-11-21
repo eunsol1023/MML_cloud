@@ -142,4 +142,6 @@ AUTH_USER_MODEL = 'user.MMLUserInfo'
 SESSION_COOKIE_DOMAIN = None
 SESSION_COOKIE_SECURE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default
-SESSION_COOKIE_AGE = 600
+SESSION_COOKIE_AGE = 600		# 세션쿠키의 유효기간 설정(default: 2주)
+SESSION_SAVE_EVERY_REQUEST = True	# 서버에게 Request를 보낼 경우 시간 초기화
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
