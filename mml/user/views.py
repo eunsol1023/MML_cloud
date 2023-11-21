@@ -16,7 +16,8 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.contrib.auth import logout
-from django.http import HttpResponse 
+from django.http import HttpResponse
+from django.middleware.csrf import get_token
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -72,7 +73,6 @@ def home(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
 def login_user(request):
     username = request.data.get('username')
     password = request.data.get('password')
@@ -83,12 +83,14 @@ def login_user(request):
     if user is not None:
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
-        login(request, user)  # 이것이 자동으로 세션을 설정합니다.
+        login(request, user)  # This automatically sets the session.
 
-        # Call the home function and print its response
-        home_response = home(request)
-        print(home_response.content)  # This prints to the Django server console
+        # CSRF 토큰 생성
+        csrf_token = get_token(request)
+
+        # CSRF 토큰을 포함한 응답
         response = JsonResponse({'message': 'Login successful'}, status=200)
+        response.set_cookie('csrftoken', csrf_token)
         return response
     else:
         return JsonResponse({'error': 'Login failed'}, status=401)
