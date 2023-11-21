@@ -74,6 +74,7 @@ def login_user(request):
         if user is not None:
             user.last_login = timezone.now()  # last_login을 현재 시간으로 업데이트합니다.
             user.save(update_fields=['last_login'])
+            request.session['user'] = user.username
             login(request._request, user)
             return JsonResponse({'message': '로그인 성공'}, status=200)
         else:
@@ -86,7 +87,6 @@ def home(request):
     if user_id:
         user = User.objects.get(pk=user_id)
         return HttpResponse(user.username + "님 환영합니다!")
-
     return HttpResponse("Home!")
 
 @api_view(['POST'])
