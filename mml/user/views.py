@@ -96,7 +96,7 @@ def login_user(request):
 def logout_user(request):
     # Log the attempt to logout
     logger.info(f"Attempting to log out user: {request.user}")
-    print(request)
+    print(request.COOKIES)
     logout(request)
 
     # Log the successful logout
