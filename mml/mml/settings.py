@@ -118,7 +118,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React 개발 서버
     "http://52.79.149.203:3000",  # React 프로덕션 서버
     "http://15.164.46.35:8000", # Django 개발 서버
-    "http://cloudmml.com" # 도메인 서버 (프론트)
+    "http://cloudmml.com", # 도메인 서버 (프론트)
     "http://api.cloudmml.com" # 도메인 서버 (백)
 ]
 CORS_ALLOW_CREDENTIALS = True
