@@ -65,7 +65,7 @@ from django.http import HttpResponse
 
 def home(request):
     if request.user.is_authenticated:
-        response = HttpResponse(f"사용자: {request.user}이 로그인했습니다")
+        response = HttpResponse(f"사용자: {request.user.name}이 로그인했습니다")
     else:
         response = HttpResponse("로그인문제발생!")
     return response
