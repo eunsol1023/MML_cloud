@@ -1,7 +1,7 @@
 # user/views.py
 
 from datetime import datetime
-import json
+import logging
 from dateutil.relativedelta import relativedelta
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -18,6 +18,8 @@ from django.utils import timezone
 from django.contrib.auth import logout
 from django.http import HttpResponse 
 
+# Create a logger instance
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -59,38 +61,45 @@ def signup(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-@permission_classes([AllowAny])  # 모든 사용자의 접근을 허용합니다.
-def login_user(request):
-    if request.method == 'POST':
-        username = request.data.get('username')
-        password = request.data.get('password')
-        print(username)
-        print(password)
-        if not username or not password:
-            return HttpResponseBadRequest('사용자 이름과 비밀번호를 모두 제공해야 합니다.')
-
-        user = authenticate(request._request, username=username, password=password)
-        if user is not None:
-            user.last_login = timezone.now()  # last_login을 현재 시간으로 업데이트합니다.
-            user.save(update_fields=['last_login'])
-            request.session['user'] = user.username
-            login(request._request, user)
-            return JsonResponse({'message': '로그인 성공'}, status=200)
-        else:
-            return JsonResponse({'error': '로그인 실패'}, status=401)
-    else:
-        return JsonResponse({'error': 'POST 요청이 아닙니다'}, status=400)
-
 def home(request):
     user_id = request.session.get('user')
     if user_id:
         user = User.objects.get(pk=user_id)
+        print(user)
         return HttpResponse(user.username + "님 환영합니다!")
     return HttpResponse("Home!")
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+def login_user(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    if not username or not password:
+        return HttpResponseBadRequest('You must provide both username and password.')
+
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        login(request, user)  # This automatically sets the session
+
+        # Call the home function and print its response
+        home_response = home(request)
+        print(home_response.content)  # This prints to the Django server console
+
+        return JsonResponse({'message': 'Login successful'}, status=200)
+    else:
+        return JsonResponse({'error': 'Login failed'}, status=401)
+
+@api_view(['POST'])
 def logout_user(request):
+    # Log the attempt to logout
+    logger.info(f"Attempting to log out user: {request.user}")
+
     logout(request)
-    return JsonResponse({'message': '로그아웃 성공'}, status=200)
+
+    # Log the successful logout
+    logger.info("Logout successful")
+
+    return JsonResponse({'message': 'Logout successful'}, status=200)
 
