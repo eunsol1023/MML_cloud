@@ -61,13 +61,12 @@ def signup(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from django.http import HttpResponse
+
 def home(request):
-    user_id = request.session.get('user')
-    if user_id:
-        user = User.objects.get(pk=user_id)
-        print(user)
-        return HttpResponse(user.username + "님 환영합니다!")
-    return HttpResponse("Home!")
+    if request.user.is_authenticated:
+        return HttpResponse(f"사용자: {request.user.username}이 로그인했습니다")
+    return HttpResponse("로그인문제발생!")
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -81,7 +80,7 @@ def login_user(request):
     if user is not None:
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
-        login(request, user)  # This automatically sets the session
+        login(request, user)  # 이것이 자동으로 세션을 설정합니다.
 
         # Call the home function and print its response
         home_response = home(request)
