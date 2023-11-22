@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.contrib.auth import logout
 from django.http import HttpResponse
 from django.middleware.csrf import get_token
+from django.contrib.auth.forms import AuthenticationForm
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -74,42 +75,34 @@ def home(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    if not username or not password:
-        return HttpResponseBadRequest('You must provide both username and password.')
+    form = AuthenticationForm(request, data=request.data)
 
-    user = authenticate(request, username=username, password=password)
-    if user is not None:
-        user.last_login = timezone.now()
-        user.save(update_fields=['last_login'])
-        login(request, user)  # This automatically sets the session.
+    if form.is_valid():
+        user = form.get_user()
+        login(request, user)  # This automatically sets the session
 
-        # CSRF 토큰 생성
+        # CSRF 토큰 생성 및 응답에 포함
         csrf_token = get_token(request)
-
-        # CSRF 토큰을 포함한 응답
         response = JsonResponse({'message': 'Login successful'}, status=200)
         response.set_cookie('csrftoken', csrf_token)
         return response
+
     else:
-        return JsonResponse({'error': 'Login failed'}, status=401)
+        return HttpResponseBadRequest(form.errors.as_json())
+
+logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def logout_user(request):
-    # 현재 로그인된 사용자와 쿠키 정보 출력
+    # Log the current user before logout
     logger.info(f"Attempting to log out user: {request.user}")
-    print(request.COOKIES)
 
-    # 사용자 로그아웃
+    # Log out the user, which invalidates the session
     logout(request)
 
-    # 쿠키 삭제 (세션 쿠키 이름 'sessionid' 사용)
-    response = JsonResponse({'message': 'Logout successful'})
-    response.delete_cookie('sessionid')
-
-    # 로그아웃 성공 메시지 로깅
+    # Logging the successful logout
     logger.info("Logout successful")
 
-    return response
+    # Return a response indicating successful logout
+    return JsonResponse({'message': 'Logout successful'}, status=200)
 
