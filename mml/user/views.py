@@ -89,9 +89,7 @@ def login_user(request):
     else:
         # 폼 유효성 검증 실패 시, 오류 메시지 반환
         return JsonResponse({'errors': form.errors}, status=400)
-
-logger = logging.getLogger(__name__)
-
+    
 @api_view(['POST'])
 def logout_user(request):
     auth_logout(request)
