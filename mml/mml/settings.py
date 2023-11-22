@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "music",
     "user",
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -138,7 +139,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSE' :[
-        'rest_framework.permissions.DjangoModelPermissionOrAnonReadOnly'
+        # 'rest_framework.permissions.DjangoModelPermissionOrAnonReadOnly'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 }
 

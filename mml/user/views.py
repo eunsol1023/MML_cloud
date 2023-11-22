@@ -22,7 +22,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.shortcuts import redirect
 from django.shortcuts import render
-
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 # Create a logger instance
@@ -68,30 +68,33 @@ def signup(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-from django.http import HttpResponse
-
-def home(request):
-    if request.user.is_authenticated:
-        response = HttpResponse(f"사용자: {request.user.username}이 로그인했습니다")
-    else:
-        response = HttpResponse("로그인문제발생!")
-    return response
-    
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    form = AuthenticationForm(request, data=request.data)  # request.POST 대신 request.data 사용
-    if form.is_valid():
-        auth_login(request, form.get_user())
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(username=username, password=password)
 
-        # JSON 응답 반환
-        return JsonResponse({'message': 'Login successful'}, status=200)
-    else:
-        # 폼 유효성 검증 실패 시, 오류 메시지 반환
-        return JsonResponse({'errors': form.errors}, status=400)
+    if user is not None:
+        # User is authenticated, generate token
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        })
+
+    return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['POST'])
 @csrf_exempt
 def logout_user(request):
-    auth_logout(request)
-    return JsonResponse({'message': 'Logged out'})
+    try:
+        # Extract the refresh token from the request
+        refresh_token = request.data.get('refresh_token')
+        token = RefreshToken(refresh_token)
+        # Blacklist the token
+        token.blacklist()
+        return Response(status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        # 로그 기록 추가 (예: logging.error(e))
+        return Response(status=status.HTTP_400_BAD_REQUEST)
