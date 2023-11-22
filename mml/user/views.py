@@ -1,46 +1,20 @@
 # user/views.py
 
 from datetime import datetime
-import logging
 from dateutil.relativedelta import relativedelta
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .serializers import MMLUserInfoSerializer
-from django.contrib.auth import authenticate, login
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, HttpResponseBadRequest
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny
-from django.utils import timezone
-from django.contrib.auth import logout
-from django.http import HttpResponse
-from django.middleware.csrf import get_token
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login as auth_login, logout as auth_logout
-from django.shortcuts import redirect
-from django.shortcuts import render
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
-from django.contrib.auth.models import User
-
-# Create a logger instance
-logger = logging.getLogger(__name__)
-
-User = get_user_model()
 
 @api_view(['POST'])
 def signup(request):
-    """
-    Create a new user instance.
-    """
+    
     data = request.data
 
     # age_range 필드가 None이 아닌 경우에 연령대로 변환
@@ -69,6 +43,7 @@ def signup(request):
     data['age_range'] = age_range
 
     serializer = MMLUserInfoSerializer(data=data)
+    
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
