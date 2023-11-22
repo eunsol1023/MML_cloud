@@ -80,15 +80,15 @@ def home(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, request.POST)
-        if form.is_valid():
-            auth_login(request, form.get_user())
-            return redirect('articles:index')
+    form = AuthenticationForm(request, data=request.POST)
+    if form.is_valid():
+        auth_login(request, form.get_user())
+
+        # JSON 응답 반환
+        return JsonResponse({'message': '로그인 성공'}, status=200)
     else:
-        form = AuthenticationForm()
-    context = {'form': form}
-    return render(request, 'user/login.html', context)  
+        # 폼 유효성 검증 실패 시, 오류 메시지 반환
+        return JsonResponse({'errors': form.errors}, status=400)
 
 logger = logging.getLogger(__name__)
 
