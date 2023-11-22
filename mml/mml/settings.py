@@ -162,16 +162,21 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
         'file': {
-            'level': 'DEBUG',
+            'level': 'INFO',  # INFO 레벨로 설정
             'class': 'logging.FileHandler',
-            'filename': 'django_debug.log',
+            'filename': 'django_info.log',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': 'INFO',  # INFO 레벨로 설정
             'propagate': True,
+        },
+        'myapp': {  # 'myapp'는 당신의 애플리케이션 이름으로 변경
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }
