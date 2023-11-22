@@ -93,4 +93,4 @@ def login_user(request):
 @api_view(['POST'])
 def logout_user(request):
     auth_logout(request)
-    return redirect('articels:index')
+    return JsonResponse({'message': 'Logged out'})
