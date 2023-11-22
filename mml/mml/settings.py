@@ -155,29 +155,29 @@ SESSION_COOKIE_AGE = 180		# 세션쿠키의 유효기간 설정(default: 2주)
 SESSION_SAVE_EVERY_REQUEST = True	# 서버에게 Request를 보낼 경우 시간 초기화
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-        'file': {
-            'level': 'INFO',  # INFO 레벨로 설정
-            'class': 'logging.FileHandler',
-            'filename': 'django_info.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',  # INFO 레벨로 설정
-            'propagate': True,
-        },
-        'myapp': {  # 'myapp'는 당신의 애플리케이션 이름으로 변경
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#         'file': {
+#             'level': 'INFO',  # INFO 레벨로 설정
+#             'class': 'logging.FileHandler',
+#             'filename': 'django_info.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console', 'file'],
+#             'level': 'INFO',  # INFO 레벨로 설정
+#             'propagate': True,
+#         },
+#         'myapp': {  # 'myapp'는 당신의 애플리케이션 이름으로 변경
+#             'handlers': ['console', 'file'],
+#             'level': 'DEBUG',
+#             'propagate': False,
+#         },
+#     },
+# }
