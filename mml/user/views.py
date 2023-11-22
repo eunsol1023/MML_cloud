@@ -19,6 +19,8 @@ from django.contrib.auth import logout
 from django.http import HttpResponse
 from django.middleware.csrf import get_token
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout as auth_logout
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -71,38 +73,40 @@ def home(request):
     else:
         response = HttpResponse("로그인문제발생!")
     return response
-
+    
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    form = AuthenticationForm(request, data=request.data)
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.data)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)  # 세션 설정
 
-    if form.is_valid():
-        user = form.get_user()
-        login(request, user)  # This automatically sets the session
-
-        # CSRF 토큰 생성 및 응답에 포함
-        csrf_token = get_token(request)
-        response = JsonResponse({'message': 'Login successful'}, status=200)
-        response.set_cookie('csrftoken', csrf_token)
-        return response
-
+            # CSRF 토큰 생성 및 응답에 포함
+            csrf_token = get_token(request)
+            response = JsonResponse({'message': '로그인 성공'}, status=200)
+            response.set_cookie('csrftoken', csrf_token)
+            return response
+        else:
+            return HttpResponseBadRequest(form.errors.as_json())
     else:
-        return HttpResponseBadRequest(form.errors.as_json())
+        form = AuthenticationForm()
+        # 이 부분은 REST API 형태에 따라 다를 수 있음
+        return JsonResponse({'form': form})   
 
 logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def logout_user(request):
-    # Log the current user before logout
-    logger.info(f"Attempting to log out user: {request.user}")
-
-    # Log out the user, which invalidates the session
-    logout(request)
-
-    # Logging the successful logout
-    logger.info("Logout successful")
-
-    # Return a response indicating successful logout
-    return JsonResponse({'message': 'Logout successful'}, status=200)
-
+    # AuthenticationForm을 사용하여 로그인 상태 확인
+    form = AuthenticationForm(request)
+    if form.is_valid():
+        # 로그아웃 로직
+        logger.info(f"Attempting to log out user: {request.user}")
+        auth_logout(request)
+        logger.info("Logout successful")
+        return JsonResponse({'message': 'Logout successful'}, status=200)
+    else:
+        # 로그인 상태가 아닌 경우의 처리
+        return JsonResponse({'message': 'User not logged in'}, status=400)
