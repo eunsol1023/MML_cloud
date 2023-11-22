@@ -91,6 +91,7 @@ def login_user(request):
         return JsonResponse({'errors': form.errors}, status=400)
     
 @api_view(['POST'])
+@csrf_exempt
 def logout_user(request):
     auth_logout(request)
     return JsonResponse({'message': 'Logged out'})
