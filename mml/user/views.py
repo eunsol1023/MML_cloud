@@ -19,8 +19,11 @@ from django.contrib.auth import logout
 from django.http import HttpResponse
 from django.middleware.csrf import get_token
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login as auth_login
-from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.shortcuts import redirect
+from django.shortcuts import render
+
+
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -78,35 +81,18 @@ def home(request):
 @permission_classes([AllowAny])
 def login_user(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.data)
+        form = AuthenticationForm(request, request.POST)
         if form.is_valid():
-            user = form.get_user()
-            auth_login(request, user)  # 세션 설정
-
-            # CSRF 토큰 생성 및 응답에 포함
-            csrf_token = get_token(request)
-            response = JsonResponse({'message': '로그인 성공'}, status=200)
-            response.set_cookie('csrftoken', csrf_token)
-            return response
-        else:
-            return HttpResponseBadRequest(form.errors.as_json())
+            auth_login(request, form.get_user())
+            return redirect('articles:index')
     else:
         form = AuthenticationForm()
-        # 이 부분은 REST API 형태에 따라 다를 수 있음
-        return JsonResponse({'form': form})   
+    context = {'form': form}
+    return render(request, 'user/login.html', context)  
 
 logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def logout_user(request):
-    # AuthenticationForm을 사용하여 로그인 상태 확인
-    form = AuthenticationForm(request)
-    if form.is_valid():
-        # 로그아웃 로직
-        logger.info(f"Attempting to log out user: {request.user}")
-        auth_logout(request)
-        logger.info("Logout successful")
-        return JsonResponse({'message': 'Logout successful'}, status=200)
-    else:
-        # 로그인 상태가 아닌 경우의 처리
-        return JsonResponse({'message': 'User not logged in'}, status=400)
+    auth_logout(request)
+    return redirect('articels:index')
