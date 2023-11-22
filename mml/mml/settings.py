@@ -123,6 +123,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_PATH = '/'
+CSRF_COOKIE_DOMAIN = '.cloudmml.com'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
