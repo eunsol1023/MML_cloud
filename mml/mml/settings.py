@@ -122,6 +122,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://cloudmml.com", # 도메인 서버 (프론트)
     "http://api.cloudmml.com" # 도메인 서버 (백)
 ]
+CSRF_TRUSTED_ORIGINS = ['http://*.cloudmml.com']
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_PATH = '/'
