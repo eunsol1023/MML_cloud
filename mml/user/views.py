@@ -23,7 +23,13 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.shortcuts import redirect
 from django.shortcuts import render
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from django.contrib.auth import authenticate
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserSerializer
+from django.contrib.auth.models import User
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -68,33 +74,28 @@ def signup(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_user(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    user = authenticate(username=username, password=password)
+class LoginView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
 
-    if user is not None:
-        # User is authenticated, generate token
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    
-@api_view(['POST'])
-@csrf_exempt
-def logout_user(request):
-    try:
-        # Extract the refresh token from the request
-        refresh_token = request.data.get('refresh_token')
-        token = RefreshToken(refresh_token)
-        # Blacklist the token
-        token.blacklist()
-        return Response(status=status.HTTP_205_RESET_CONTENT)
-    except Exception as e:
-        # 로그 기록 추가 (예: logging.error(e))
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+class LogoutView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
