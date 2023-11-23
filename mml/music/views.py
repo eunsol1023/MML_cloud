@@ -1,13 +1,9 @@
 from django.shortcuts import render
-from rest_framework.views import APIView
+from rest_framework import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import *
-
-import pymysql
-import pandas as pd
-import numpy as np
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -793,3 +789,4 @@ class tag_song2vec_view(APIView):
         tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
 
         return Response(tag_song2vec_final.head(20), status=status.HTTP_200_OK)
+
