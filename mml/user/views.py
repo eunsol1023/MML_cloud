@@ -14,7 +14,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.middleware.csrf import get_token
-from .serializers import MMLUserInfoSerializer, MMLUserGenSerializer, MMLUserArtist
+from .serializers import MMLUserInfoSerializer, MMLUserGenSerializer, MMLUserLikeArtist
 
 
 # Create a logger instance
@@ -74,7 +74,7 @@ def signup(request):
         for i in range(1, 6):
             artist = data.get(f'artist{i}')
             if artist:
-                MMLUserArtist.objects.create(
+                MMLUserLikeArtist.objects.create(
                     gen=user.gender,
                     age_group=user.age_range,
                     artist_id=artist,
