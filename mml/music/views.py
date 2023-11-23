@@ -632,7 +632,8 @@ class song2vec_view(APIView):
         song2vec_final = song2vec_final[['title', 'artist', 'album_image_url']]
 
         return Response(song2vec_final.head(20), status=status.HTTP_200_OK)
-    
+
+
 class tag_song2vec_view(APIView):
     def get(self, request):
 
@@ -716,7 +717,7 @@ class tag_song2vec_view(APIView):
         most_similar_tags = [similarity_results[keyword][0] for keyword in input_keywords]
 
         # 해당 태그를 포함하는 음악 리스트 추출
-        music_list = [df for df in music_list if df is not None and not df.empty]
+        music_list = []
         for tag in most_similar_tags:
             # 해당 태그를 포함하는 모든 음악 찾기
             music_with_tag = mml_music_tag_df[mml_music_tag_df['tag'].str.contains(tag)]
