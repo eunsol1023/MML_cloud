@@ -17,8 +17,6 @@ from konlpy.tag import Okt
 
 from gensim.models import Word2Vec
 
-from sklearn.metrics.pairwise import cosine_similarity
-
 from scipy.stats import pearsonr
 
 import joblib
@@ -34,29 +32,23 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import random
 
+from data_loader import DataLoader
+
+
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
-mml_user_his = 'SELECT * FROM mml_user_his'
-mml_user_his_df = pd.read_sql(mml_user_his, engine)
+# DataLoader 인스턴스 생성
+data_loader = DataLoader(engine)
 
-mml_music_info = 'SELECT * FROM mml_music_info'
-mml_music_info_df = pd.read_sql(mml_music_info, engine)        
+mml_user_his_df, mml_music_info_df, mml_music_tag_df, mml_artist_gen_df, mml_user_like_artist_df = data_loader.load_data()
 
-mml_music_tag = 'SELECT * FROM mml_music_tag'
-mml_music_tag_df = pd.read_sql(mml_music_tag, engine)
 
 class music_reco_view(APIView):
     def get(self, request):
-        ##user_like_artist
-        mml_artist_gen = 'SELECT * FROM mml_artist_gen'
-        mml_artist_gen_df = pd.read_sql(mml_artist_gen, engine)
+        # data = load_data_once()
 
-        mml_user_like_artist = 'SELECT * FROM mml_user_like_artist'
-        mml_user_like_artist_df = pd.read_sql(mml_user_like_artist, engine)
-
-        mml_user_like_artist_df = mml_user_like_artist_df.rename(columns={'artist_id':'artist'})
-        mml_user_like_artist_df.columns
-
+        #user_like_artist
+        
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
         merged_data = pd.merge(mml_user_like_artist_df, mml_artist_gen_df, on='artist', how='left')
@@ -110,34 +102,13 @@ class music_reco_view(APIView):
             return user_genre_df['user_id'].iloc[user_indices]
 
         # 테스트
-        test_user_id = request.session.get('username')
-        recommended_users = recommend_songs(test_user_id)
-        print(recommended_users)
-
-        # 추천 함수를 수정하여 이미 선호하는 아티스트를 제외하고 추천
-        def recommend_new_artists(user_id, num_recommendations=10):
-
-            # 원래 사용자의 아티스트 선호도 가져오기
-            user_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'] == user_id]['artist'].tolist()
-
-            # 사용자 id에 기반한 추천 받기
-            recommended_user_ids = recommend_songs(user_id, num_recommendations).tolist()
-
-            # 추천된 사용자들이 선호하는 아티스트 찾기
-            recommended_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'].isin(recommended_user_ids)]['artist']
-
-            # 원래 사용자가 선호하는 아티스트 제외
-            new_recommended_artists = recommended_artists[~recommended_artists.isin(user_artists)].unique()
-
-            return new_recommended_artists
+        user_id = 'QrDM6lLc'  # 예시 사용자
 
         # 이제 추천 함수를 다시 실행하여 테스트 사용자와 유사한 사용자를 찾을 수 있습니다.
-        recommended_user_ids = recommend_songs(test_user_id).tolist()
+        recommended_user_ids = recommend_songs(user_id).tolist()
 
         # 유사한 사용자들이 선호하는 아티스트 찾기
         preferred_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'].isin(recommended_user_ids)]['artist'].unique()
-
-        preferred_artists
 
         def get_all_songs_for_artists(artist_list):
             songs_dict = {}
@@ -164,12 +135,6 @@ class music_reco_view(APIView):
         # 선택된 노래와 아티스트를 데이터프레임으로 변환
         df_selected_songs_with_artists = pd.DataFrame(selected_songs_with_artists, columns=['artist', 'title'])
 
-        # Normalize the 'Title' and 'Artist' columns in both dataframes for case-insensitive comparison
-        mml_music_info_df['title'] = mml_music_info_df['title'].str.lower()
-        mml_music_info_df['artist'] = mml_music_info_df['artist'].str.lower()
-        df_selected_songs_with_artists['title'] = df_selected_songs_with_artists['title'].str.lower()
-        df_selected_songs_with_artists['artist'] = df_selected_songs_with_artists['artist'].str.lower()
-
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
         user_like_artist_final = pd.merge(
             mml_music_info_df, df_selected_songs_with_artists,
@@ -186,12 +151,6 @@ class music_reco_view(APIView):
 
         processed_lyrics = pd.read_csv('./music/files/processed_lyrics.csv')
 
-        # Normalize the 'Title' and 'Artist' columns in both dataframes for case-insensitive comparison
-        mml_music_info_df['title'] = mml_music_info_df['title'].str.lower()
-        mml_music_info_df['artist'] = mml_music_info_df['artist'].str.lower()
-        mml_user_his_df['title'] = mml_user_his_df['title'].str.lower()
-        mml_user_his_df['artist'] = mml_user_his_df['artist'].str.lower()
-
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
         matched_songs_df = pd.merge(
             mml_music_info_df, mml_user_his_df,
@@ -206,13 +165,9 @@ class music_reco_view(APIView):
 
         # Create a reference dataframe from all_music_data with only necessary columns and lowercase transformation for merging
         genre_reference_df = mml_music_info_df[['title', 'artist', 'genre']].copy()
-        genre_reference_df['title'] = genre_reference_df['title'].str.lower()
-        genre_reference_df['artist'] = genre_reference_df['artist'].str.lower()
 
         # We create a similar lowercase version of Title and Artist in music_tag for a case-insensitive merge
         music_tag_lowercase = mml_music_tag_df[['title', 'artist', 'tag']].copy()
-        music_tag_lowercase['title'] = music_tag_lowercase['title'].str.lower()
-        music_tag_lowercase['artist'] = music_tag_lowercase['artist'].str.lower()
 
         # Merge genre into music_tag using lowercase Title and Artist for matching
         music_tag_data = pd.merge(music_tag_lowercase, genre_reference_df,
@@ -248,7 +203,7 @@ class music_reco_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = request.session.get('username')
+        user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
@@ -311,12 +266,6 @@ class music_reco_view(APIView):
         # user_profile_vector_for_similarity = user_profiles[user_id_to_recommend]  # 해당 사용자의 프로필 벡터를 가져옵니다.
         recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, user_specific_top_genres_songs_df)
         recommendations_with_similarity
-
-        # Normalize the 'Title' and 'Artist' columns in both dataframes for case-insensitive comparison
-        mml_music_info_df['title'] = mml_music_info_df['title'].str.lower()
-        mml_music_info_df['artist'] = mml_music_info_df['artist'].str.lower()
-        recommendations_with_similarity['title'] = recommendations_with_similarity['title'].str.lower()
-        recommendations_with_similarity['artist'] = recommendations_with_similarity['artist'].str.lower()
 
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
         song2vec_final = pd.merge(
@@ -396,8 +345,8 @@ class user_like_artist_view(APIView):
             return user_genre_df['user_id'].iloc[user_indices]
 
         # 테스트
-        test_user_id = '02FoMC0v'  # 예시 사용자
-        recommended_users = recommend_songs(test_user_id)
+        user_id = 'QrDM6lLc'  # 예시 사용자
+        recommended_users = recommend_songs(user_id)
         print(recommended_users)
 
         # 추천 함수를 수정하여 이미 선호하는 아티스트를 제외하고 추천
@@ -418,7 +367,7 @@ class user_like_artist_view(APIView):
             return new_recommended_artists
 
         # 이제 추천 함수를 다시 실행하여 테스트 사용자와 유사한 사용자를 찾을 수 있습니다.
-        recommended_user_ids = recommend_songs(test_user_id).tolist()
+        recommended_user_ids = recommend_songs(user_id).tolist()
 
         # 유사한 사용자들이 선호하는 아티스트 찾기
         preferred_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'].isin(recommended_user_ids)]['artist'].unique()
@@ -449,12 +398,6 @@ class user_like_artist_view(APIView):
 
         # 선택된 노래와 아티스트를 데이터프레임으로 변환
         df_selected_songs_with_artists = pd.DataFrame(selected_songs_with_artists, columns=['artist', 'title'])
-
-        # Normalize the 'Title' and 'Artist' columns in both dataframes for case-insensitive comparison
-        mml_music_info_df['title'] = mml_music_info_df['title'].str.lower()
-        mml_music_info_df['artist'] = mml_music_info_df['artist'].str.lower()
-        df_selected_songs_with_artists['title'] = df_selected_songs_with_artists['title'].str.lower()
-        df_selected_songs_with_artists['artist'] = df_selected_songs_with_artists['artist'].str.lower()
 
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
         user_like_artist_final = pd.merge(
@@ -552,7 +495,7 @@ class song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = request.session.get('username')
+        user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
@@ -632,8 +575,7 @@ class song2vec_view(APIView):
         song2vec_final = song2vec_final[['title', 'artist', 'album_image_url']]
 
         return Response(song2vec_final.head(20), status=status.HTTP_200_OK)
-
-
+    
 class tag_song2vec_view(APIView):
     def get(self, request):
 
@@ -661,7 +603,7 @@ class tag_song2vec_view(APIView):
         music_data = music_data.join(processed_lyrics)
 
         # Input sentence from the user
-        input_sentence = request.data.get('sentence', '')
+        input_sentence = "선선한 날 아침 산책"
 
         # Tokenizing the sentence
         tokens = word_tokenize(input_sentence)
@@ -669,6 +611,8 @@ class tag_song2vec_view(APIView):
         # Removing stopwords (commonly used words that are not useful for keyword extraction)
         # Note: For Korean, a custom list of stopwords might be needed as nltk's default is for English.
         filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
+
+        filtered_tokens
 
         # Checking the unique values in the 'Title' column to understand its format
         unique_titles = mml_music_tag_df['title'].unique()
@@ -769,7 +713,7 @@ class tag_song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = request.session.get('username')
+        user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
