@@ -669,8 +669,6 @@ class tag_song2vec_view(APIView):
         # Note: For Korean, a custom list of stopwords might be needed as nltk's default is for English.
         filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
 
-        filtered_tokens
-
         # Checking the unique values in the 'Title' column to understand its format
         unique_titles = mml_music_tag_df['title'].unique()
 
@@ -718,7 +716,7 @@ class tag_song2vec_view(APIView):
         most_similar_tags = [similarity_results[keyword][0] for keyword in input_keywords]
 
         # 해당 태그를 포함하는 음악 리스트 추출
-        music_list = []
+        music_list = [df for df in music_list if df is not None and not df.empty]
         for tag in most_similar_tags:
             # 해당 태그를 포함하는 모든 음악 찾기
             music_with_tag = mml_music_tag_df[mml_music_tag_df['tag'].str.contains(tag)]
