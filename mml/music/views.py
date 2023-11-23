@@ -34,6 +34,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import random
 
+
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 mml_user_his = 'SELECT * FROM mml_user_his'
@@ -47,6 +48,7 @@ mml_music_tag_df = pd.read_sql(mml_music_tag, engine)
 
 class music_reco_view(APIView):
     def get(self, request):
+        print("1")
         ##user_like_artist
         mml_artist_gen = 'SELECT * FROM mml_artist_gen'
         mml_artist_gen_df = pd.read_sql(mml_artist_gen, engine)
@@ -333,7 +335,7 @@ class music_reco_view(APIView):
 
 class user_like_artist_view(APIView):
     def get(self, request):
-
+        print("2")
         mml_artist_gen = 'SELECT * FROM mml_artist_gen'
         mml_artist_gen_df = pd.read_sql(mml_artist_gen, engine)
 
@@ -470,7 +472,7 @@ class user_like_artist_view(APIView):
 
 class song2vec_view(APIView):
     def get(self, request):
-    
+        print("3")
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
 
@@ -635,7 +637,7 @@ class song2vec_view(APIView):
     
 class tag_song2vec_view(APIView):
     def get(self, request):
-
+        print("4")
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
 

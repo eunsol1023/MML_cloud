@@ -14,6 +14,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.middleware.csrf import get_token
+from .serializers import MMLUserInfoSerializer, MMLUserGenSerializer, MMLUserArtist
 
 
 # Create a logger instance
@@ -23,40 +24,65 @@ User = get_user_model()
 
 @api_view(['POST'])
 def signup(request):
-    """
-    Create a new user instance.
-    """
     data = request.data
-
-    # age_range 필드가 None이 아닌 경우에 연령대로 변환
+    print(data)
+    # 나이 범위 계산
     if data.get('age_range'):
-        
-        birthdate = datetime.strptime((data['age_range']), "%Y-%m-%d")
-        print(type(birthdate))
+        birthdate = datetime.strptime(data['age_range'], "%Y-%m-%d")
         today = datetime.now()
         age = relativedelta(today, birthdate).years
         if 10 <= age < 20:
-            age_range = "10대"
+            age_range = "teenagers"
         elif 20 <= age < 30:
-            age_range = "20대"
+            age_range = "20s"
         elif 30 <= age < 40:
-            age_range = "30대"
+            age_range = "30s"
         elif 40 <= age < 50:
-            age_range = "40대"
+            age_range = "40s"
         elif 50 <= age < 60:
-            age_range = "50대"
-        elif 60 <= age <70:
-            age_range = "60대"
+            age_range = "50s"
+        elif 60 <= age < 70:
+            age_range = "60s"
         else:
-            age_range = "기타연령대"
+            age_range = "Other age range"
+        data['age_range'] = age_range
 
-    # 데이터를 저장할 때 age_range 필드에 연령대 값 설정
-    data['age_range'] = age_range
-
+    # 사용자 데이터 직렬화 및 저장
     serializer = MMLUserInfoSerializer(data=data)
     if serializer.is_valid():
-        serializer.save()
+        user = serializer.save()
+
+        # 장르 및 우선순위 데이터 처리
+        genre_priority_data = {
+            "1": data.get('genre1'),
+            "2": data.get('genre2'),
+            "3": data.get('genre3'),
+            "4": data.get('genre4'),
+            "5": data.get('genre5'),
+        }
+        for priority, genre in genre_priority_data.items():
+            if genre:
+                mml_user_gen_serializer = MMLUserGenSerializer(data={
+                    'username': user,
+                    'genre': genre,
+                    'priority': priority
+                })
+                if mml_user_gen_serializer.is_valid():
+                    mml_user_gen_serializer.save()
+
+        # 아티스트 데이터 처리
+        for i in range(1, 6):
+            artist = data.get(f'artist{i}')
+            if artist:
+                MMLUserArtist.objects.create(
+                    gen=user.gender,
+                    age_group=user.age_range,
+                    artist_id=artist,
+                    user_id=user.username
+                )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 logger = logging.getLogger(__name__)
@@ -80,3 +106,5 @@ def logout_user(request):
     auth_logout(request)
     logger.info(f'Logout successful for user: {username}')
     return JsonResponse({'message': 'Logged out'}, status=200)
+
+
