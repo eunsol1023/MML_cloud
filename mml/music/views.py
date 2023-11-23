@@ -98,7 +98,26 @@ class music_reco_view(APIView):
             return user_genre_df['user_id'].iloc[user_indices]
 
         # 테스트
-        user_id = 'QrDM6lLc'  # 예시 사용자
+        test_user_id = request.session.get('username')
+        recommended_users = recommend_songs(test_user_id)
+        print(recommended_users)
+
+        # 추천 함수를 수정하여 이미 선호하는 아티스트를 제외하고 추천
+        def recommend_new_artists(user_id, num_recommendations=10):
+
+            # 원래 사용자의 아티스트 선호도 가져오기
+            user_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'] == user_id]['artist'].tolist()
+
+            # 사용자 id에 기반한 추천 받기
+            recommended_user_ids = recommend_songs(user_id, num_recommendations).tolist()
+
+            # 추천된 사용자들이 선호하는 아티스트 찾기
+            recommended_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'].isin(recommended_user_ids)]['artist']
+
+            # 원래 사용자가 선호하는 아티스트 제외
+            new_recommended_artists = recommended_artists[~recommended_artists.isin(user_artists)].unique()
+
+            return new_recommended_artists
 
         # 이제 추천 함수를 다시 실행하여 테스트 사용자와 유사한 사용자를 찾을 수 있습니다.
         recommended_user_ids = recommend_songs(user_id).tolist()
@@ -199,7 +218,7 @@ class music_reco_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = 'QrDM6lLc'
+        user_id = request.session.get('username')
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
@@ -491,7 +510,7 @@ class song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = 'QrDM6lLc'
+        user_id = request.session.get('username')
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
@@ -709,7 +728,7 @@ class tag_song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = 'QrDM6lLc'
+        user_id = request.session.get('username')
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
