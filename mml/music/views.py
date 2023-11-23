@@ -110,7 +110,7 @@ class music_reco_view(APIView):
             return user_genre_df['user_id'].iloc[user_indices]
 
         # 테스트
-        test_user_id = '02FoMC0v'  # 예시 사용자
+        test_user_id = request.session.get('username')
         recommended_users = recommend_songs(test_user_id)
         print(recommended_users)
 
@@ -248,7 +248,7 @@ class music_reco_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = '02FoMC0v'
+        user_id = request.session.get('username')
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
@@ -552,7 +552,7 @@ class song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = '02FoMC0v'
+        user_id = request.session.get('username')
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
@@ -660,7 +660,7 @@ class tag_song2vec_view(APIView):
         music_data = music_data.join(processed_lyrics)
 
         # Input sentence from the user
-        input_sentence = "선선한 날 아침 산책"
+        input_sentence = request.data.get('sentence', '')
 
         # Tokenizing the sentence
         tokens = word_tokenize(input_sentence)
@@ -770,7 +770,7 @@ class tag_song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        user_id = '02FoMC0v'
+        user_id = request.session.get('username')
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
