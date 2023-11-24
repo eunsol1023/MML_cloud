@@ -1,0 +1,93 @@
+import pymysql
+import pandas as pd
+import numpy as np
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import nltk
+import string
+from konlpy.tag import Okt
+
+from gensim.models import Word2Vec
+
+from sklearn.metrics.pairwise import cosine_similarity
+
+from scipy.stats import pearsonr
+
+
+import nltk
+import string
+
+
+nltk.download('punkt')
+nltk.download('stopwords')
+
+conn = pymysql.Connection(
+    host = 'mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com',
+    user = 'admin',
+    password = 'pizza715',
+    database = 'mml',
+    charset = 'utf8')
+
+mml_user_his = 'SELECT * FROM mml_user_his'
+mml_user_his_df = pd.read_sql(mml_user_his, conn)
+
+mml_music_info = 'SELECT * FROM mml_music_info'
+mml_music_info_df = pd.read_sql(mml_music_info, conn)
+
+mml_music_tag = 'SELECT * FROM mml_music_tag'
+mml_music_tag_df = pd.read_sql(mml_music_tag, conn)
+
+# Normalize the 'Title' and 'Artist' columns in both dataframes for case-insensitive comparison
+mml_music_info_df['title'] = mml_music_info_df['title'].str.lower()
+mml_music_info_df['artist'] = mml_music_info_df['artist'].str.lower()
+mml_user_his_df['title'] = mml_user_his_df['title'].str.lower()
+mml_user_his_df['artist'] = mml_user_his_df['artist'].str.lower()
+
+# Merge the dataframes on 'Title' and 'Artist' to find matching songs
+matched_songs_df = pd.merge(
+    mml_music_info_df, mml_user_his_df,
+    on=['title', 'artist'],
+    how='inner',
+    suffixes=('_all_music', '_user_log')
+)
+
+# Since the user wants to add lyrics to the user music log based on the title and artist match,
+# we will merge the 'user_music_log_with_genres' with 'new_all_music_data' on 'Title' and 'Artist'
+# to add the 'Lyrics' column to the user music log dataframe.
+
+# We will use the 'matched_songs_df' which already has the matched songs to select the needed columns
+# We will create a new dataframe with the 'Lyrics' column included
+
+# Selecting only the necessary columns to include in the final merged dataframe
+music_data = matched_songs_df[['user', 'title', 'artist', 'genre_user_log', 'playtime', 'created_at', 'lyrics']]
+
+# 영어 불용어 리스트를 로딩
+stop_words = set(stopwords.words('english'))
+
+# 가사 전처리 함수 정의
+def preprocess_lyrics(lyrics):
+    # lyrics가 문자열인지 확인
+    if not isinstance(lyrics, str):
+        return []  # lyrics가 문자열이 아닐 경우 빈 리스트 반환
+
+    # lyrics가 문자열일 경우 기존의 전처리를 계속 진행
+    lyrics = lyrics.lower()
+    lyrics = lyrics.translate(str.maketrans('', '', string.punctuation))
+    word_tokens = word_tokenize(lyrics)
+    filtered_lyrics = [word for word in word_tokens if not word in stop_words]
+    return filtered_lyrics
+
+# 전체 데이터셋에 대해 가사 전처리 수행
+music_data['processed_lyrics'] = music_data['lyrics'].apply(preprocess_lyrics)
+
+music_data['processed_lyrics'].to_csv('processed_lyrics.csv', index=False, encoding='utf-8-sig')
+
+# Word2Vec 모델을 훈련시키기 위한 가사 데이터셋 준비
+lyrics_corpus = music_data['processed_lyrics'].tolist()
+
+# Word2Vec 모델 초기화 및 훈련
+# 차원 수를 100으로 설정하고, 주변 단어(window)를 2개로 설정, 최소 단어 빈도수(min_count)를 5로 설정
+w2v_model = Word2Vec(sentences=lyrics_corpus, vector_size=100, window=3, min_count=1, workers=4)
+
+w2v_model.save("word2vec_model.model")
