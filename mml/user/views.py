@@ -58,7 +58,7 @@ def signup(request):
             "2": data.get('genre2'),
             "3": data.get('genre3'),
             "4": data.get('genre4'),
-            "5": data.get('genre5'),
+            "5": data.get('genre5'), 
         }
         for priority, genre in genre_priority_data.items():
             if genre:
