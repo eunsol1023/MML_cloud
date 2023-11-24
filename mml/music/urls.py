@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import user_like_artist_view, song2vec_view, tag_song2vec_view
+from .views import user_like_artist_view, test_song2vec_view, song2vec_view, tag_song2vec_view
 
 urlpatterns = [
     path('user_like_artist/', user_like_artist_view.as_view()),
+    path('test_song2vec/', test_song2vec_view.as_view()),
     path('song2vec/', song2vec_view.as_view()),
     path('tag_song2vec/', tag_song2vec_view.as_view()),
 ]
