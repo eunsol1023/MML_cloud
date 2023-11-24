@@ -2,25 +2,16 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
-class DataLoader:
+class artist_DataLoader:
     def __init__(self, engine):
         self.engine = engine
 
-    def load_data(self):
-        mml_user_his = 'SELECT * FROM mml_user_his'
-        mml_user_his_df = pd.read_sql(mml_user_his, self.engine)
-        mml_user_his_df['title'] = mml_user_his_df['title'].str.lower()
-        mml_user_his_df['artist'] = mml_user_his_df['artist'].str.lower()
+    def artist_load_data(self):
 
         mml_music_info = 'SELECT * FROM mml_music_info'
         mml_music_info_df = pd.read_sql(mml_music_info, self.engine)
         mml_music_info_df['title'] = mml_music_info_df['title'].str.lower()
         mml_music_info_df['artist'] = mml_music_info_df['artist'].str.lower()        
-
-        mml_music_tag = 'SELECT * FROM mml_music_tag'
-        mml_music_tag_df = pd.read_sql(mml_music_tag, self.engine)
-        mml_music_tag_df['title'] = mml_music_tag_df['title'].str.lower()
-        mml_music_tag_df['artist'] = mml_music_tag_df['artist'].str.lower()
 
         mml_artist_gen = 'SELECT * FROM mml_artist_gen'
         mml_artist_gen_df = pd.read_sql(mml_artist_gen, self.engine)
@@ -29,4 +20,4 @@ class DataLoader:
         mml_user_like_artist_df = pd.read_sql(mml_user_like_artist, self.engine)
         mml_user_like_artist_df = mml_user_like_artist_df.rename(columns={'artist_id':'artist'})
 
-        return mml_user_his_df, mml_music_info_df, mml_music_tag_df, mml_artist_gen_df, mml_user_like_artist_df
+        return mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df

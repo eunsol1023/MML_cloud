@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 # 기타 필요한 import 문
 from sqlalchemy import create_engine
-from data_loader import DataLoader
+from song2vec_data_loader import song2vec_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 from django.apps import apps
 
@@ -15,36 +15,11 @@ from django.apps import apps
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 # DataLoader 인스턴스 생성
-data_loader = DataLoader(engine)
+song2vec_data_loader = song2vec_DataLoader(engine)
 
-mml_user_his_df, mml_music_info_df, mml_music_tag_df, mml_artist_gen_df, mml_user_like_artist_df = data_loader.load_data()
+mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data = song2vec_data_loader.song2vec_load_data()
 
 user_id = '08XxwFym'
-
-matched_songs_df = pd.merge(
-        mml_music_info_df, mml_user_his_df,
-        on=['title', 'artist'],
-        how='inner',
-        suffixes=('_all_music', '_user_log')
-    )
-
-processed_lyrics = pd.read_csv('./music/files/processed_lyrics.csv')
-
-# Selecting only the necessary columns to include in the final merged dataframe
-music_data = matched_songs_df[['user', 'title', 'artist', 'genre_user_log', 'playtime', 'created_at', 'lyrics']]
-
-music_data = music_data.join(processed_lyrics)
-
-# Create a reference dataframe from all_music_data with only necessary columns and lowercase transformation for merging
-genre_reference_df = mml_music_info_df[['title', 'artist', 'genre']].copy()
-
-# We create a similar lowercase version of Title and Artist in music_tag for a case-insensitive merge
-music_tag_lowercase = mml_music_tag_df[['title', 'artist', 'tag']].copy()
-
-# Merge genre into music_tag using lowercase Title and Artist for matching
-music_tag_data = pd.merge(music_tag_lowercase, genre_reference_df,
-                                left_on=['title', 'artist'], right_on=['title', 'artist'],
-                                how='left')
 
 def get_top_words_weights(lyrics_list, top_n=20):
             # 모든 가사를 하나의 리스트로 결합합니다.
@@ -107,37 +82,11 @@ def recommend_songs_with_similarity(user_profile_vector, tag_vectors, songs_data
 class song2vec_view(APIView):
 
     def get(self, request):
-        # print('3번')
+        print('3번')
     
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
 
-        # processed_lyrics = pd.read_csv('./music/files/processed_lyrics.csv')
-        print('3번')
-        # Merge the dataframes on 'Title' and 'Artist' to find matching songs
-        # matched_songs_df = pd.merge(
-        #     mml_music_info_df, mml_user_his_df,
-        #     on=['title', 'artist'],
-        #     how='inner',
-        #     suffixes=('_all_music', '_user_log')
-        # )
-        
-        # # Selecting only the necessary columns to include in the final merged dataframe
-        # music_data = matched_songs_df[['user', 'title', 'artist', 'genre_user_log', 'playtime', 'created_at', 'lyrics']]
-
-        # music_data = music_data.join(processed_lyrics)
-
-        # # Create a reference dataframe from all_music_data with only necessary columns and lowercase transformation for merging
-        # genre_reference_df = mml_music_info_df[['title', 'artist', 'genre']].copy()
-
-        # # We create a similar lowercase version of Title and Artist in music_tag for a case-insensitive merge
-        # music_tag_lowercase = mml_music_tag_df[['title', 'artist', 'tag']].copy()
-
-        # # Merge genre into music_tag using lowercase Title and Artist for matching
-        # music_tag_data = pd.merge(music_tag_lowercase, genre_reference_df,
-        #                                 left_on=['title', 'artist'], right_on=['title', 'artist'],
-        #                                 how='left')
-        print('3번')
         # 모든 가사에서 가장 흔한 단어를 추출하고 가중치를 계산하는 함수를 정의합니다.
         # def get_top_words_weights(lyrics_list, top_n=20):
         #     # 모든 가사를 하나의 리스트로 결합합니다.
@@ -150,6 +99,7 @@ class song2vec_view(APIView):
         #     return weights.to_dict()
 
         # 사용자별 가장 흔한 단어의 가중치를 계산합니다.
+        print('a')
         top_words_weights = get_top_words_weights(music_data['processed_lyrics'])
 
         # # 사용자의 가사 프로필을 만들 때, 가장 흔한 단어에 가중치를 주어 벡터를 계산하는 함수를 수정합니다.
@@ -165,11 +115,13 @@ class song2vec_view(APIView):
         #         if weighted_vectors:  # 가중치가 적용된 벡터의 평균을 계산합니다.
         #             lyrics_vectors.append(np.mean(weighted_vectors, axis=0))
         #     return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
+        print('b')
 
         # 사용자별 프로필 벡터를 생성합니다.
         # user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
+        print('c')
 
         # 특정 사용자 ID에 대한 사용자의 청취 기록을 필터링'02FoMC0v'
         user_specific_log = music_data[music_data['user'] == user_id]
@@ -190,6 +142,7 @@ class song2vec_view(APIView):
         #     # 빈 문자열을 제거합니다.
         #     tags = [tag for tag in tags if tag]  # 공백 태그 제거
         #     return tags
+        print('d')
 
         # 태그 데이터에 전처리 함수를 적용합니다.
         user_specific_top_genres_songs_df['processed_tags'] = user_specific_top_genres_songs_df['tag'].apply(preprocess_tags)
@@ -222,6 +175,7 @@ class song2vec_view(APIView):
         #     recommendations_with_scores = songs_data.iloc[top_indices]
         #     recommendations_with_scores['similarity'] = similarity_scores[top_indices]
         #     return recommendations_with_scores[['title', 'artist', 'tag', 'similarity']]
+        print('e')
 
         # 모든 태그 벡터를 하나의 배열로 추출합니다.
         tag_vectors_matrix = np.array(list(user_specific_top_genres_songs_df['tag_vector']))
@@ -237,6 +191,7 @@ class song2vec_view(APIView):
             on=['title', 'artist'],
             how='inner'
         )
+        print('f')
 
         song2vec_final = song2vec_final[['title', 'artist', 'album_image_url']]
 

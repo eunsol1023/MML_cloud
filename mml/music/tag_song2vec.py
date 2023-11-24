@@ -23,14 +23,14 @@ from django.apps import apps
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from data_loader import DataLoader
+from song2vec_data_loader import song2vec_DataLoader
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 # DataLoader 인스턴스 생성
-data_loader = DataLoader(engine)
+song2vec_data_loader = song2vec_DataLoader(engine)
 
-mml_user_his_df, mml_music_info_df, mml_music_tag_df, mml_artist_gen_df, mml_user_like_artist_df = data_loader.load_data()
+mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data = song2vec_data_loader.song2vec_load_data()
 
 user_id = '08XxwFym'
 

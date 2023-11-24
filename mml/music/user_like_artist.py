@@ -6,16 +6,16 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 # 기타 필요한 import 문
 from sqlalchemy import create_engine
-from data_loader import DataLoader
+from artist_data_loader import artist_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 import random
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 # DataLoader 인스턴스 생성
-data_loader = DataLoader(engine)
+artist_data_loader = artist_DataLoader(engine)
 
-mml_user_his_df, mml_music_info_df, mml_music_tag_df, mml_artist_gen_df, mml_user_like_artist_df = data_loader.load_data()
+mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_loader.artist_load_data()
 
 user_id = '08XxwFym'
 
