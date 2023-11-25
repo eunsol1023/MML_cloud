@@ -100,6 +100,51 @@ def recommend_songs_with_similarity(user_profile_vector, tag_vectors, songs_data
     recommendations_with_scores['similarity'] = similarity_scores[top_indices]
     return recommendations_with_scores[['title', 'artist', 'tag', 'similarity']]
 
+def create_lyrics_profile(lyrics_list, w2v_model):
+    lyrics_vectors = []
+    for lyrics in lyrics_list:
+        lyrics_vector = []
+        for word in lyrics:
+            if word in w2v_model.wv:  # 모델의 단어장에 있는 경우에만 처리합니다.
+                lyrics_vector.append(w2v_model.wv[word])
+        if lyrics_vector:
+            lyrics_vectors.append(np.mean(lyrics_vector, axis=0))
+    return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
+
+# 태그 데이터를 전처리하는 함수를 정의합니다.
+def preprocess_tags(tag_string):
+    # '#' 기호를 기준으로 태그를 분리합니다.
+    tags = tag_string.strip().split('#')
+    # 빈 문자열을 제거합니다.
+    tags = [tag for tag in tags if tag]  # 공백 태그 제거
+    return tags
+
+# 태그를 벡터로 변환하는 함수를 정의합니다.
+def vectorize_tags(tags, w2v_model):
+    tag_vectors = []
+    for tag in tags:
+        # 태그 내의 각 단어에 대해 벡터를 얻고 평균을 계산합니다.
+        tag_word_vectors = [w2v_model.wv[word] for word in tag.split() if word in w2v_model.wv]
+        if tag_word_vectors:  # 태그가 모델 단어장에 있는 경우에만 평균 벡터를 계산합니다.
+            tag_vectors.append(np.mean(tag_word_vectors, axis=0))
+    return np.mean(tag_vectors, axis=0) if tag_vectors else np.zeros(w2v_model.vector_size)
+
+# 사용자 프로필 벡터와 모든 태그 벡터 사이의 코사인 유사도를 계산하고 상위 N개의 추천과 함께 유사도를 반환하는 함수
+def recommend_songs_with_similarity(user_profile_vector, tag_vectors, songs_data, top_n=20):
+    # 사용자 프로필 벡터를 코사인 유사도 계산을 위해 reshape
+    user_vector_reshaped = user_profile_vector.reshape(1, -1)
+
+    # 모든 태그 벡터와의 유사도 계산
+    similarity_scores = cosine_similarity(user_vector_reshaped, tag_vectors)[0]
+
+    # 유사도 점수를 기반으로 상위 N개의 인덱스를 가져옵니다
+    top_indices = similarity_scores.argsort()[-top_n:][::-1]
+
+    # 상위 N개의 노래 추천 정보와 유사도 점수를 함께 반환
+    recommendations_with_scores = songs_data.iloc[top_indices]
+    recommendations_with_scores['similarity'] = similarity_scores[top_indices]
+    return recommendations_with_scores[['title', 'artist', 'tag', 'similarity']]
+
 class song2vec_view(APIView):
 
     def get(self, request):
