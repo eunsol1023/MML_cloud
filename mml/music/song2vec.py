@@ -21,58 +21,29 @@ mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data
 
 user_id = '08XxwFym'
 
-def get_top_words_weights(lyrics_list, top_n=20):
-    # 가사 리스트를 단어별로 펼쳐 하나의 리스트로 만듭니다.
-    all_words = (word for lyrics in lyrics_list for word in lyrics)
+# def get_top_words_weights(lyrics_list, top_n=20):
+#             # 모든 가사를 하나의 리스트로 결합합니다.
+#             all_words = [word for lyrics in lyrics_list for word in lyrics]
+#             # 가장 흔한 단어와 그 빈도수를 계산합니다.
+#             top_words = pd.Series(all_words).value_counts().head(top_n)
+#             # 가중치를 계산합니다: 여기서는 단순화를 위해 빈도수를 그대로 사용하지만,
+#             # 다른 가중치 할당 방식을 사용할 수도 있습니다.
+#             weights = top_words / top_words.max()  # 최대 빈도수로 정규화하여 가중치를 계산합니다.
+#             return weights.to_dict()
 
-    # 가장 빈번한 단어와 그 빈도를 계산합니다.
-    top_words = Counter(all_words).most_common(top_n)
-
-    # 가중치 정규화를 위해 최대 빈도를 구합니다.
-    max_frequency = top_words[0][1] if top_words else 1
-
-    # 단어별 가중치를 계산하여 사전 형태로 저장합니다.
-    weights = {word: freq / max_frequency for word, freq in top_words}
-
-    # 계산된 가중치를 출력합니다.
-    print("Calculated Weights:", weights)
-
-    return weights
-
-def create_weighted_lyrics_profile(lyrics_list, w2v_model, top_words_weights):
-    total_vector = None
-    lyrics_count = 0
-
-    for lyrics in lyrics_list:
-        # 모델 단어장에 있는 유효한 단어만 필터링합니다.
-        valid_words = [word for word in lyrics if word in w2v_model.wv]
-        
-        # 유효한 단어가 없으면 가사를 건너뜁니다.
-        if not valid_words:
-            continue
-
-        # 가사의 각 단어에 대한 가중치가 적용된 벡터를 계산합니다.
-        weighted_vectors = np.array([w2v_model.wv[word] * top_words_weights.get(word, 1) for word in valid_words])
-        
-        # 이 가사의 평균 벡터를 계산합니다.
-        lyrics_vector = np.mean(weighted_vectors, axis=0)
-        
-        print("가중치가 적용된 가사 벡터:", lyrics_vector)
-
-        # 벡터들을 집계합니다.
-        if total_vector is None:
-            total_vector = lyrics_vector
-        else:
-            total_vector += lyrics_vector
-
-        lyrics_count += 1
-
-    # 가사가 처리되지 않았으면 0 벡터를 반환하여 나눗셈 오류를 방지합니다.
-    if total_vector is None:
-        return np.zeros(w2v_model.vector_size)
-
-    # 모든 가사에 대한 평균 벡터를 계산합니다.
-    return total_vector / lyrics_count
+# # 사용자의 가사 프로필을 만들 때, 가장 흔한 단어에 가중치를 주어 벡터를 계산하는 함수를 수정합니다.
+# def create_weighted_lyrics_profile(lyrics_list, w2v_model, top_words_weights):
+#     lyrics_vectors = []
+#     for lyrics in lyrics_list:
+#         # lyrics 벡터의 평균을 계산하기 전에 각 단어에 대한 가중치를 고려합니다.
+#         weighted_vectors = []
+#         for word in lyrics:
+#             if word in w2v_model.wv:  # 모델의 단어장에 있는 경우에만 처리합니다.
+#                 weight = top_words_weights.get(word, 1)  # 단어에 대한 가중치를 가져옵니다.
+#                 weighted_vectors.append(w2v_model.wv[word] * weight)
+#         if weighted_vectors:  # 가중치가 적용된 벡터의 평균을 계산합니다.
+#             lyrics_vectors.append(np.mean(weighted_vectors, axis=0))
+#     return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
 class song2vec_view(APIView):
 
