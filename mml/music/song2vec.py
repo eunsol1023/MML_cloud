@@ -5,11 +5,11 @@ from rest_framework import status
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+# 기타 필요한 import 문
 from sqlalchemy import create_engine
 from song2vec_data_loader import song2vec_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 from django.apps import apps
-from collections import Counter
 
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
@@ -52,19 +52,6 @@ class song2vec_view(APIView):
     
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
-
-        # 사용자별 가사 데이터 추출
-        user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
-        print("사용자 가사 데이터 예시:", user_lyrics[:5])  # 처음 5개의 가사 데이터 출력
-        print("가사 데이터 개수:", len(user_lyrics))  # 가사 데이터의 총 개수 출력
-
-        # 가중치 계산
-        top_words_weights = get_top_words_weights(user_lyrics)
-        # 계산된 가중치를 출력하여 결과를 확인합니다
-        print("계산된 가중치:", top_words_weights)
-
-        # 가중치가 적용된 사용자 프로필 벡터 생성
-        user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, top_words_weights)
 
         def create_lyrics_profile(lyrics_list, w2v_model):
             lyrics_vectors = []
