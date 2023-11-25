@@ -14,7 +14,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.middleware.csrf import get_token
-from .serializers import MMLUserInfoSerializer, MMLUserGenSerializer, MMLUserArtist
+from .serializers import MMLUserInfoSerializer, MMLUserGenSerializer, MMLUserLikeArtist
 
 
 # Create a logger instance
