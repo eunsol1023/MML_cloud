@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MMLUserInfo
+from .models import MMLUserInfo, MMLUserGen, MMLUserLikeArtist
 
 class MMLUserInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,7 +13,7 @@ class MMLUserInfoSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        # create_user 메서드를 사용하여 비밀번호를 해시하고 새 사용자 인스턴스를 생성합니다.
+        # 사용자 인스턴스 생성
         user = MMLUserInfo.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
@@ -22,10 +22,31 @@ class MMLUserInfoSerializer(serializers.ModelSerializer):
             is_active=validated_data.get('is_active', True),
             is_staff=validated_data.get('is_staff', False)
         )
+
+        # 장르 데이터 처리
+        genre_priority_data = validated_data.pop('genre_priority', {})
+        for priority, genre in genre_priority_data.items():
+            MMLUserGen.objects.create(
+                username=user,
+                genre=genre,
+                priority=priority
+            )
+
+        # 아티스트 데이터 처리
+        for i in range(1, 6):
+            artist = validated_data.pop(f'artist{i}', None)
+            if artist:
+                MMLUserLikeArtist.objects.create(
+                    gen=user.gender,
+                    age_group=user.age_range,
+                    artist_id=artist,
+                    user_id=user.username
+                )
+                
         return user
 
     def update(self, instance, validated_data):
-        # 비밀번호를 제외한 필드를 업데이트합니다.
+        # 필드 업데이트
         for field, value in validated_data.items():
             if field == 'password':
                 instance.set_password(value)
@@ -33,3 +54,8 @@ class MMLUserInfoSerializer(serializers.ModelSerializer):
                 setattr(instance, field, value)
         instance.save()
         return instance
+
+class MMLUserGenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MMLUserGen
+        fields = ['username', 'genre', 'priority']
