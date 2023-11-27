@@ -22,8 +22,8 @@ pd.set_option('mode.chained_assignment', None)
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print(request.session)
-        session_key = request.sessionid.session_key
+        print(request.COOKIE)
+        session_key = request.COOKIE.sessionid
         user_id = None
         
         if session_key:
