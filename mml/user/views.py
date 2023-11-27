@@ -103,6 +103,7 @@ def login_user(request):
 @api_view(['POST'])
 def logout_user(request):
     username = request.user.username
+    print(username)
     auth_logout(request)
     logger.info(f'Logout successful for user: {username}')
     return JsonResponse({'message': 'Logged out'}, status=200)
