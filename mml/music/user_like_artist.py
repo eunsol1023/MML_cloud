@@ -26,10 +26,15 @@ class user_like_artist_view(APIView):
         user_id = None
         
         if session_key:
-            session = Session.objects.get(session_key=session_key)
-            session_data = session.get_decoded()
-            user_id = session_data.get('username')
-            print(user_id)
+            try:
+                session = Session.objects.get(session_key=session_key)
+                session_data = session.get_decoded()
+                user_id = session_data.get('username')
+                print("User ID from session:", user_id)
+            except Session.DoesNotExist:
+                print("Session with key does not exist")
+        else:
+            print("Session key does not exist")
 
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
