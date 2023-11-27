@@ -24,7 +24,6 @@ User = get_user_model()
 
 @api_view(['POST'])
 def signup(request):
-    print("login")
     data = request.data
     print(data)
     # 나이 범위 계산

@@ -56,7 +56,11 @@ class tag_song2vec_view(APIView):
         music_data = music_data.join(processed_lyrics)
 
         # Input sentence from the user
-        input_sentence = "겨울 아침 출근"
+        input_sentence = request.GET.get('input_sentence', None)
+        print("input_sentence의 값 : ", input_sentence)
+        print("input_sentence의 타입:", type(input_sentence))
+        if not input_sentence:
+            return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Tokenizing the sentence
         tokens = word_tokenize(input_sentence)
