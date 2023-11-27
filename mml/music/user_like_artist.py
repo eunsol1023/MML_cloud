@@ -18,7 +18,7 @@ artist_data_loader = artist_DataLoader(engine)
 
 mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_loader.artist_load_data()
 
-
+pd.set_option('mode.chained_assignment', None)
 
 class user_like_artist_view(APIView):
     def get(self, request):
@@ -29,6 +29,7 @@ class user_like_artist_view(APIView):
             session = Session.objects.get(session_key=session_key)
             session_data = session.get_decoded()
             user_id = session_data.get('username')
+            print(user_id)
 
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
