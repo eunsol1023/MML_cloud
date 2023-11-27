@@ -75,7 +75,7 @@ def signup(request):
         for i in range(1, 6):
             artist = data.get(f'artist{i}')
             if artist:
-                MMLUserArtist.objects.create(
+                MMLUserLikeArtist.objects.create(
                     gen=user.gender,
                     age_group=user.age_range,
                     artist_id=artist,

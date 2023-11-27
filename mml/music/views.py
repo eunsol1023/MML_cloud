@@ -13,6 +13,11 @@ from .song2vec import song2vec_view
 
 from .tag_song2vec import tag_song2vec_view
 
+import logging
+
+
+# Create or get a logger
+logger = logging.getLogger(__name__)
 
 def song_info(request):
     # Check if it's a GET request
@@ -20,6 +25,9 @@ def song_info(request):
         # Get parameters from the request
         title = request.GET.get('title', None)
         artist = request.GET.get('artist', None)
+
+        # Logging the received parameters for debugging
+        logger.info(f"Received title: {title}, artist: {artist}")
 
         # Validate the parameters
         if not title or not artist:
@@ -45,6 +53,7 @@ def song_info(request):
 
         except Exception as e:
             # Handle any other exceptions
+            logger.error(f"An error occurred: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
 
     else:

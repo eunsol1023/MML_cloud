@@ -5,5 +5,5 @@ urlpatterns = [
     path('user_like_artist/', user_like_artist_view.as_view()),
     path('song2vec/', song2vec_view.as_view()),
     path('tag_song2vec/', tag_song2vec_view.as_view()),
-    path('music/song_info/', song_info, name='get_song_info'),
+    path('music/song_info/', song_info),
 ]
