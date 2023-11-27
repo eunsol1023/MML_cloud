@@ -126,7 +126,7 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
 # CSRF_COOKIE_PATH = '/'
 # CSRF_COOKIE_DOMAIN = '.cloudmml.com'
-# CSRF_TRUSTED_ORIGINS = ['http://*.cloudmml.com']
+CSRF_TRUSTED_ORIGINS = ['http://*.cloudmml.com']
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
