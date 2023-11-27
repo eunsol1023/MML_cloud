@@ -56,7 +56,8 @@ class tag_song2vec_view(APIView):
         music_data = music_data.join(processed_lyrics)
 
         # Input sentence from the user
-        input_sentence = "가을 밤 드라이브"
+        input_sentence = request.query_params.get('input_sentence', None)
+
 
         # Tokenizing the sentence
         tokens = word_tokenize(input_sentence)
