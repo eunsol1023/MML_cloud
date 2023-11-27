@@ -32,19 +32,19 @@ def signup(request):
         today = datetime.now()
         age = relativedelta(today, birthdate).years
         if 10 <= age < 20:
-            age_range = "teenagers"
+            age_range = "10대"
         elif 20 <= age < 30:
-            age_range = "20s"
+            age_range = "20대"
         elif 30 <= age < 40:
-            age_range = "30s"
+            age_range = "30대"
         elif 40 <= age < 50:
-            age_range = "40s"
+            age_range = "40대"
         elif 50 <= age < 60:
-            age_range = "50s"
+            age_range = "50대"
         elif 60 <= age < 70:
-            age_range = "60s"
+            age_range = "60대"
         else:
-            age_range = "Other age range"
+            age_range = "기타 연령대"
         data['age_range'] = age_range
 
     # 사용자 데이터 직렬화 및 저장

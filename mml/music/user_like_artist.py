@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from artist_data_loader import artist_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 import random
+from django.contrib.auth.decorators import login_required
 
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
@@ -20,6 +21,7 @@ mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_load
 
 
 class user_like_artist_view(APIView):
+    @login_required
     def get(self, request):
         user_id = request.user.username
         print(user_id)
