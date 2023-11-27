@@ -17,7 +17,7 @@ artist_data_loader = artist_DataLoader(engine)
 
 mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_loader.artist_load_data()
 
-user_id = '08XxwFym'
+user_id = '5ebppPv2'
 
 class user_like_artist_view(APIView):
     def get(self, request):
@@ -74,25 +74,6 @@ class user_like_artist_view(APIView):
 
             # 가장 유사한 사용자들 반환
             return user_genre_df['user_id'].iloc[user_indices]
-        
-        recommended_users = recommend_songs(user_id)
-
-        # 추천 함수를 수정하여 이미 선호하는 아티스트를 제외하고 추천
-        def recommend_new_artists(user_id, num_recommendations=10):
-
-            # 원래 사용자의 아티스트 선호도 가져오기
-            user_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'] == user_id]['artist'].tolist()
-
-            # 사용자 id에 기반한 추천 받기
-            recommended_user_ids = recommend_songs(user_id, num_recommendations).tolist()
-
-            # 추천된 사용자들이 선호하는 아티스트 찾기
-            recommended_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'].isin(recommended_user_ids)]['artist']
-
-            # 원래 사용자가 선호하는 아티스트 제외
-            new_recommended_artists = recommended_artists[~recommended_artists.isin(user_artists)].unique()
-
-            return new_recommended_artists
 
         # 이제 추천 함수를 다시 실행하여 테스트 사용자와 유사한 사용자를 찾을 수 있습니다.
         recommended_user_ids = recommend_songs(user_id).tolist()
@@ -113,14 +94,18 @@ class user_like_artist_view(APIView):
         # 모든 추천된 아티스트별로 모든 노래를 가져옵니다.
         artist_songs_dict = get_all_songs_for_artists(preferred_artists)
 
-        # 랜덤으로 20곡 선택하기 전에 각 곡에 해당하는 아티스트 정보도 포함시키기
-        all_songs_with_artists = []
-        for artist, songs in artist_songs_dict.items():
-            for song in songs:
-                all_songs_with_artists.append((artist, song))
+        # 아티스트당 최대 노래 수 제한
+        MAX_SONGS_PER_ARTIST = 3
 
-        # 랜덤으로 20곡 선택 (아티스트 정보 포함)
-        selected_songs_with_artists = random.sample(all_songs_with_artists, 20)
+        # 각 아티스트별로 최대 노래 수만큼 노래 선택
+        limited_songs_with_artists = []
+        for artist, songs in artist_songs_dict.items():
+            selected_songs = random.sample(songs, min(MAX_SONGS_PER_ARTIST, len(songs)))
+            for song in selected_songs:
+                limited_songs_with_artists.append((artist, song))
+
+        # 전체 리스트에서 랜덤으로 20곡 선택
+        selected_songs_with_artists = random.sample(limited_songs_with_artists, min(20, len(limited_songs_with_artists)))
 
         # 선택된 노래와 아티스트를 데이터프레임으로 변환
         df_selected_songs_with_artists = pd.DataFrame(selected_songs_with_artists, columns=['artist', 'title'])

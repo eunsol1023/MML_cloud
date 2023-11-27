@@ -15,9 +15,11 @@ class artist_DataLoader:
 
         mml_artist_gen = 'SELECT * FROM mml_artist_gen'
         mml_artist_gen_df = pd.read_sql(mml_artist_gen, self.engine)
+        mml_artist_gen_df['artist'] = mml_artist_gen_df['artist'].str.lower() 
 
         mml_user_like_artist = 'SELECT * FROM mml_user_like_artist'
         mml_user_like_artist_df = pd.read_sql(mml_user_like_artist, self.engine)
+        mml_user_like_artist_df['artist_id'] = mml_user_like_artist_df['artist_id'].str.lower()
         mml_user_like_artist_df = mml_user_like_artist_df.rename(columns={'artist_id':'artist'})
 
         return mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df
