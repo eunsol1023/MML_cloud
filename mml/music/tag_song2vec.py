@@ -57,6 +57,7 @@ class tag_song2vec_view(APIView):
 
         # Input sentence from the user
         input_sentence = request.query_params.get('input_sentence', None)
+        print("input_sentence의 값 : ", input_sentence)
         print("input_sentence의 타입:", type(input_sentence))
         if not input_sentence:
             return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
