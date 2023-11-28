@@ -22,24 +22,8 @@ pd.set_option('mode.chained_assignment', None)
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print("쿠키의 값 : ", request.COOKIES)
-        session_key = request.COOKIES.get("sessionid")
-        user_id = None
-        
-        session_data = session.get_decoded()
-        user_id2 = session_data.get('username')
-        print('세션의 값', user_id2)
-        
-        if session_key:
-            try:
-                session = Session.objects.get(session_key=session_key)
-                session_data = session.get_decoded()
-                user_id = session_data.get('username')
-                print("User ID from session:", user_id)
-            except Session.DoesNotExist:
-                print("Session with key does not exist")
-        else:
-            print("Session key does not exist")
+        print("쿠키의 값 : ", request.COOKIE["sessionid"])
+        print("쿠키의 값2 : ", request.COOKIES)
             
 
         # 데이터 전처리
