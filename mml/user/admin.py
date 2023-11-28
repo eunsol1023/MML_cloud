@@ -1,5 +1,6 @@
 from django.contrib.sessions.models import Session
 from django.contrib import admin
+from .models import MMLUserInfo
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
@@ -9,8 +10,5 @@ class SessionAdmin(admin.ModelAdmin):
     def get_decoded(self, obj):
         return obj.get_decoded()
 
-from django.contrib import admin
-from .models import user
 
-# Register your models here.
-admin.site.register(user)
+admin.site.register(MMLUserInfo)
