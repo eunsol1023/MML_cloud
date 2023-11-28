@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
@@ -18,7 +18,7 @@ class MMLUserInfoManager(BaseUserManager):
         
         return self.create_user(username, password, **extra_fields)
 
-class MMLUserInfo(AbstractBaseUser, PermissionsMixin):
+class MMLUserInfo(AbstractUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     gender = models.CharField(max_length=1, choices=(('M', 'Male'), ('F', 'Female')))
     age_range = models.CharField(max_length=10)
