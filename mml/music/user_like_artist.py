@@ -4,23 +4,28 @@ from rest_framework.response import Response
 from rest_framework import status
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-# 기타 필요한 import 문
 from sqlalchemy import create_engine
-from artist_data_loader import DataLoader
+from artist_data_loader import artist_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 import random
+from django.contrib.sessions.models import Session
+
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 # DataLoader 인스턴스 생성
-data_loader = DataLoader(engine)
+artist_data_loader = artist_DataLoader(engine)
 
-mml_user_his_df, mml_music_info_df, mml_music_tag_df, mml_artist_gen_df, mml_user_like_artist_df = data_loader.load_data()
+mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_loader.artist_load_data()
 
-user_id = '5ebppPv2'
+pd.set_option('mode.chained_assignment', None)
 
 class user_like_artist_view(APIView):
     def get(self, request):
+        print("쿠키의 값 : ", request.COOKIES["sessionid"])
+        print("쿠키의 값2 : ", request.COOKIES.get("sessionid"))
+        
+        user_id= request.COOKIES.get("sessionid")
         
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
@@ -34,7 +39,7 @@ class user_like_artist_view(APIView):
         }).reset_index()
 
 
-        # ITF-IDF 벡터 구현 
+        # ITF-IDF 벡터 구현
         tfidf = TfidfVectorizer(stop_words='english')
         tfidf_matrix = tfidf.fit_transform(user_genre_df['genre'])
 
@@ -73,16 +78,12 @@ class user_like_artist_view(APIView):
 
             # 가장 유사한 사용자들 반환
             return user_genre_df['user_id'].iloc[user_indices]
-        
-        recommended_users = recommend_songs(user_id)
 
         # 이제 추천 함수를 다시 실행하여 테스트 사용자와 유사한 사용자를 찾을 수 있습니다.
         recommended_user_ids = recommend_songs(user_id).tolist()
 
         # 유사한 사용자들이 선호하는 아티스트 찾기
         preferred_artists = mml_user_like_artist_df[mml_user_like_artist_df['user_id'].isin(recommended_user_ids)]['artist'].unique()
-
-        print(preferred_artists)
 
         def get_all_songs_for_artists(artist_list):
             songs_dict = {}
@@ -133,4 +134,3 @@ class user_like_artist_view(APIView):
             user_like_artist_results.append(result)
 
         return Response(user_like_artist_results, status=status.HTTP_200_OK)
-    
