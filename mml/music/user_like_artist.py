@@ -35,11 +35,12 @@ class user_like_artist_view(APIView):
                 session_data = session.get_decoded()
                 # Print the session data
                 print("Session Data:", session_data)
-                print(session_data.get("_auth_user_id"))
-                # # Access specific values from the session data
-                # serializer = MMLUserInfo.objects.get(id=)
-                # user_id = session_data.get('username')
-                # print("User ID from session:", user_id)
+                user_id = session_data.get("_auth_user_id")
+                # Access specific values from the session data
+                serializer = MMLUserInfo.objects.get(id=user_id)
+                print(serializer)
+                user_id = session_data.get('username')
+                print("User ID from session:", user_id)
                 
                 # Other logic in your view
             except Session.DoesNotExist:
