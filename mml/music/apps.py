@@ -11,5 +11,6 @@ class MusicConfig(AppConfig):
     model = None
 
     def ready(self):
+        print('Ready 구문이 실행중입니다')
         if os.path.exists(self.model_path):
             self.model = load(self.model_path)
