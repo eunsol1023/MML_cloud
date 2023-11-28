@@ -22,9 +22,26 @@ pd.set_option('mode.chained_assignment', None)
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print("쿠키의 값2 : ", request.COOKIES.get("sessionid"))
-        
-        user_id= request.COOKIES.get("sessionid")
+        session_key = request.COOKIES.get("sessionid")
+        print(session_key)
+        if session_key:
+            try:
+                # Retrieve the session object from the database
+                session = Session.objects.get(session_key=session_key)
+                # Get the decoded session data
+                session_data = session.get_decoded()
+                # Print the session data
+                print("Session Data:", session_data)
+                
+                # Access specific values from the session data
+                user_id = session_data.get('username')
+                print("User ID from session:", user_id)
+                
+                # Other logic in your view
+            except Session.DoesNotExist:
+                print("Session with key does not exist")
+        else:
+            print("Session key does not exist")
         
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
