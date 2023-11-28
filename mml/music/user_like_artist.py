@@ -23,7 +23,7 @@ user_id = '1234'
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print('=====2번=====')
+        print('==========2번==========')
         session_key = request.COOKIES.get("sessionid")
         print(session_key)
     
@@ -37,10 +37,8 @@ class user_like_artist_view(APIView):
                 print("Session Data:", session_data)
                 session_id = session_data.get("_auth_user_id")
                 # Access specific values from the session data
-                user = MMLUserInfo.objects.get(id=session_id)
+                user = MMLUserInfo.objects.get(session_id=session_id)
                 user_id = str(user)
-                print(type(user_id))
-                
                 print("User ID from session:", user_id)
                 
                 # Other logic in your view
