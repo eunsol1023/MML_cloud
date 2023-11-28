@@ -26,7 +26,7 @@ class song2vec_view(APIView):
         print('==========3번==========')
         
         session_key = request.COOKIES.get("sessionid")
-    
+
         if session_key:
             try:
                 # Retrieve the session object from the database
@@ -124,7 +124,8 @@ class song2vec_view(APIView):
         # 사용자 프로필 벡터와 모든 태그 벡터 사이의 코사인 유사도를 계산하고 상위 N개의 추천과 함께 유사도를 반환하는 함수
         def recommend_songs_with_similarity(user_profile_vector, tag_vectors, songs_data, top_n=20):
             # 사용자 프로필 벡터를 코사인 유사도 계산을 위해 reshape
-            user_vector_reshaped = user_profile_vector.reshape(1, -1)
+            #user_vector_reshaped = user_profile_vector.reshape(1, -1)
+            user_vector_reshaped = user
 
             # 모든 태그 벡터와의 유사도 계산
             similarity_scores = cosine_similarity(user_vector_reshaped, tag_vectors)[0]
