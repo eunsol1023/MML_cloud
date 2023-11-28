@@ -22,7 +22,6 @@ pd.set_option('mode.chained_assignment', None)
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print("쿠키의 값 : ", request.COOKIES["sessionid"])
         print("쿠키의 값2 : ", request.COOKIES.get("sessionid"))
         
         user_id= request.COOKIES.get("sessionid")
