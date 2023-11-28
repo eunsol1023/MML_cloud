@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 # 기타 필요한 import 문
 from sqlalchemy import create_engine
-from data_loader import DataLoader
+from artist_data_loader import DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 import random
 
