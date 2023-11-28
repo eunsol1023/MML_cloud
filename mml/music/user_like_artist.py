@@ -20,7 +20,7 @@ user_id = '5ebppPv2'
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print('2번')
+        print('=====2번=====')
 
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
