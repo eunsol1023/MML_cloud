@@ -23,8 +23,8 @@ pd.set_option('mode.chained_assignment', None)
 class user_like_artist_view(APIView):
     def get(self, request):
         session_key = request.POST.get('session_key', None)
-
         print(session_key)
+        
         if session_key:
             try:
                 # Retrieve the session object from the database
@@ -34,9 +34,9 @@ class user_like_artist_view(APIView):
                 # Print the session data
                 print("Session Data:", session_data)
                 
-                # Access the 'username' value from the session data
-                username = session_data.get('username')
-                print("Username from session:", username)
+                # Access specific values from the session data
+                user_id = session_data.get('username')
+                print("User ID from session:", user_id)
                 
                 # Other logic in your view
             except Session.DoesNotExist:
