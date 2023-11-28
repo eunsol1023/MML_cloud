@@ -8,8 +8,6 @@ from sqlalchemy import create_engine
 from artist_data_loader import artist_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 import random
-from django.contrib.sessions.models import Session
-
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
@@ -18,34 +16,12 @@ artist_data_loader = artist_DataLoader(engine)
 
 mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_loader.artist_load_data()
 
-pd.set_option('mode.chained_assignment', None)
+user_id = '5ebppPv2'
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        # session_key = request.POST.get('session_key', None)
-        # print(session_key)
-        
-        # if session_key:
-        #     try:
-        #         # Retrieve the session object from the database
-        #         session = Session.objects.get(session_key=session_key)
-        #         # Get the decoded session data
-        #         session_data = session.get_decoded()
-        #         # Print the session data
-        #         print("Session Data:", session_data)
-                
-        #         # Access specific values from the session data
-        #         user_id = session_data.get('username')
-        #         print("User ID from session:", user_id)
-                
-        #         # Other logic in your view
-        #     except Session.DoesNotExist:
-        #         print("Session with key does not exist")
-        # else:
-        #     print("Session key does not exist")
-        
-        user_id = 'zmffkdnem'
-        
+        print('2번')
+
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
         merged_data = pd.merge(mml_user_like_artist_df, mml_artist_gen_df, on='artist', how='left')
@@ -97,6 +73,8 @@ class user_like_artist_view(APIView):
 
             # 가장 유사한 사용자들 반환
             return user_genre_df['user_id'].iloc[user_indices]
+        
+        recommended_users = recommend_songs(user_id)
 
         # 이제 추천 함수를 다시 실행하여 테스트 사용자와 유사한 사용자를 찾을 수 있습니다.
         recommended_user_ids = recommend_songs(user_id).tolist()
