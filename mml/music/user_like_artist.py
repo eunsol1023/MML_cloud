@@ -35,11 +35,9 @@ class user_like_artist_view(APIView):
                 session_data = session.get_decoded()
                 # Print the session data
                 print("Session Data:", session_data)
-                user_id = session_data.get("_auth_user_id")
+                session_id = session_data.get("_auth_user_id")
                 # Access specific values from the session data
-                serializer = MMLUserInfo.objects.get(id=user_id)
-                print(serializer)
-                user_id = session_data.get('username')
+                user_id = MMLUserInfo.objects.get(id=session_id)
                 print("User ID from session:", user_id)
                 
                 # Other logic in your view
