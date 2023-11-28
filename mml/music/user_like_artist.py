@@ -24,6 +24,7 @@ class user_like_artist_view(APIView):
     def get(self, request):
         print('=====2번=====')
         session_key = request.COOKIES.get("sessionid")
+        print(session_key)
     
         if session_key:
             try:
