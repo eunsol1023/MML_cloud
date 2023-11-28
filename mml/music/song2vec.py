@@ -9,7 +9,8 @@ from sqlalchemy import create_engine
 from song2vec_data_loader import song2vec_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 from django.apps import apps
-
+from django.contrib.sessions.models import Session
+from user.models import MMLUserInfo
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
@@ -18,12 +19,33 @@ song2vec_data_loader = song2vec_DataLoader(engine)
 
 mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data = song2vec_data_loader.song2vec_load_data()
 
-user_id = 'zmffkdnem'
 
 class song2vec_view(APIView):
 
     def get(self, request):
-        print('3번')
+        print('==========3번==========')
+        
+        session_key = request.COOKIES.get("sessionid")
+    
+        if session_key:
+            try:
+                # Retrieve the session object from the database
+                session = Session.objects.get(session_key=session_key)
+                # Get the decoded session data
+                session_data = session.get_decoded()
+                # Print the session data
+                print("Session Data:", session_data)
+                session_id = session_data.get("_auth_user_id")
+                # Access specific values from the session data
+                user = MMLUserInfo.objects.get(pk=session_id)
+                user_id = str(user)
+                print("User ID from session:", user_id)
+                
+                # Other logic in your view
+            except Session.DoesNotExist:
+                print("Session with key does not exist")
+        else:
+            print("Session key does not exist")
     
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
