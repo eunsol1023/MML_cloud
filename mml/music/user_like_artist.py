@@ -27,24 +27,24 @@ class user_like_artist_view(APIView):
         session_key = request.COOKIES.get("sessionid")
         print(session_key)
     
-        if session_key:
-            try:
-                # Retrieve the session object from the database
-                session = Session.objects.get(session_key=session_key)
-                # Get the decoded session data
-                session_data = session.get_decoded()
-                # Print the session data
-                print("Session Data:", session_data)
-                session_id = session_data.get("_auth_user_id")
-                # Access specific values from the session data
-                user_id = MMLUserInfo.objects.get(id=session_id)
-                print("User ID from session:", user_id)
+        # if session_key:
+        #     try:
+        #         # Retrieve the session object from the database
+        #         session = Session.objects.get(session_key=session_key)
+        #         # Get the decoded session data
+        #         session_data = session.get_decoded()
+        #         # Print the session data
+        #         print("Session Data:", session_data)
+        #         session_id = session_data.get("_auth_user_id")
+        #         # Access specific values from the session data
+        #         user_id = MMLUserInfo.objects.get(id=session_id)
+        #         print("User ID from session:", user_id)
                 
-                # Other logic in your view
-            except Session.DoesNotExist:
-                print("Session with key does not exist")
-        else:
-            print("Session key does not exist")
+        #         # Other logic in your view
+        #     except Session.DoesNotExist:
+        #         print("Session with key does not exist")
+        # else:
+        #     print("Session key does not exist")
 
         # 데이터 전처리
         # 사용자가 좋아하는 아티스트 데이터와 아티스트 장르 데이터를 병합하여 좋아하는 아티스트의 장르를 구합니다.
