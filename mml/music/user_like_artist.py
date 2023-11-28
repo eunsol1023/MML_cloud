@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import random
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
+pd.set_option('mode.chained_assignment', None)
 
 # DataLoader 인스턴스 생성
 artist_data_loader = artist_DataLoader(engine)
