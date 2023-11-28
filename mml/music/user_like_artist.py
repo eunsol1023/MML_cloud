@@ -9,6 +9,7 @@ from artist_data_loader import artist_DataLoader
 from sklearn.metrics.pairwise import cosine_similarity
 import random
 from django.contrib.sessions.models import Session
+from user.models import MMLUserInfo
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 pd.set_option('mode.chained_assignment', None)
@@ -34,10 +35,11 @@ class user_like_artist_view(APIView):
                 session_data = session.get_decoded()
                 # Print the session data
                 print("Session Data:", session_data)
-                
-                # Access specific values from the session data
-                user_id = session_data.get('username')
-                print("User ID from session:", user_id)
+                print(session_data.get("_auth_user_id"))
+                # # Access specific values from the session data
+                # serializer = MMLUserInfo.objects.get(id=)
+                # user_id = session_data.get('username')
+                # print("User ID from session:", user_id)
                 
                 # Other logic in your view
             except Session.DoesNotExist:
