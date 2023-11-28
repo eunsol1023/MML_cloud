@@ -17,7 +17,7 @@ artist_data_loader = artist_DataLoader(engine)
 
 mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_loader.artist_load_data()
 
-user_id = '5ebppPv2'
+user_id = '1234'
 
 class user_like_artist_view(APIView):
     def get(self, request):
