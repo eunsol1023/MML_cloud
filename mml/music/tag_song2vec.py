@@ -182,7 +182,7 @@ class tag_song2vec_view(APIView):
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, weights_dict)
         # user_profile_vector = create_lyrics_profile(user_lyrics, w2v_model)
 
-        # 특정 사용자 ID에 대한 사용자의 청취 기록을 필터링'02FoMC0v'
+        # 특정 사용자 ID에 대한 사용자의 청취 기록을 필터링
         user_specific_log = music_data[music_data['user'] == user_id]
 
         # 특정 사용자의 장르별 플레이 횟수를 계산
@@ -190,6 +190,7 @@ class tag_song2vec_view(APIView):
 
         # 특정 사용자의 상위 3개 장르를 가져옵니다.
         user_specific_top_genres = user_specific_genre_counts.head(5).index.tolist()
+        print(user_specific_top_genres)
 
         # 사용자 상위 장르와 일치하는 노래에 대해 music_total_with_genre 데이터 프레임 필터링
         user_specific_top_genres_songs_df = music_tag_data[music_tag_data['genre'].isin(user_specific_top_genres)]
