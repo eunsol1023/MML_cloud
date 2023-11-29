@@ -200,6 +200,7 @@ class tag_song2vec_view(APIView):
             # 상위 N개의 노래 추천 정보와 유사도 점수를 함께 반환
             recommendations_with_scores = songs_data.iloc[top_indices]
             recommendations_with_scores['similarity'] = similarity_scores[top_indices]
+            print(recommendations_with_scores)
             return recommendations_with_scores[['title', 'artist', 'tag', 'similarity']]
 
         # 모든 태그 벡터를 하나의 배열로 추출합니다.
@@ -208,7 +209,7 @@ class tag_song2vec_view(APIView):
         # 사용자 ID에 대한 노래 추천을 받고 유사도 점수를 포함하여 출력합니다.
         # user_profile_vector_for_similarity = user_profiles[user_id_to_recommend]  # 해당 사용자의 프로필 벡터를 가져옵니다.
         recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, music_tag_data)
-        recommendations_with_similarity
+        print(recommendations_with_similarity)
 
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
         tag_song2vec_final = pd.merge(
