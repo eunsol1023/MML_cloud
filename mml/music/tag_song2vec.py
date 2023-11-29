@@ -95,8 +95,14 @@ class tag_song2vec_view(APIView):
             return similar_tags
 
         # 문장에서 형태소 추출 및 불용어 제거
-        sentence = '봄 아침 산책'
-        morphs = [morph for morph in okt.morphs(sentence) if morph not in stopwords]
+        # 사용자로부터의 입력 문장
+        input_sentence = request.GET.get('input_sentence', None)
+        print("input_sentence의 값 : ", input_sentence)
+        print("input_sentence의 타입:", type(input_sentence))
+        if not input_sentence:
+            return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        morphs = [morph for morph in okt.morphs(input_sentence) if morph not in stopwords]
 
         # 태그 목록
         tags = [
@@ -200,7 +206,6 @@ class tag_song2vec_view(APIView):
             # 상위 N개의 노래 추천 정보와 유사도 점수를 함께 반환
             recommendations_with_scores = songs_data.iloc[top_indices]
             recommendations_with_scores['similarity'] = similarity_scores[top_indices]
-            print(recommendations_with_scores)
             return recommendations_with_scores[['title', 'artist', 'tag', 'similarity']]
 
         # 모든 태그 벡터를 하나의 배열로 추출합니다.
