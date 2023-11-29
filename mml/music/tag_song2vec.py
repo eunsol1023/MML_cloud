@@ -200,7 +200,6 @@ class tag_song2vec_view(APIView):
 
             # 모든 태그 벡터와의 유사도 계산
             similarity_scores = cosine_similarity(user_vector_reshaped, tag_vectors)[0]
-            print(similarity_scores)
 
             # 유사도 점수를 기반으로 상위 N개의 인덱스를 가져옵니다
             top_indices = similarity_scores.argsort()[-top_n:][::-1]
@@ -225,7 +224,7 @@ class tag_song2vec_view(APIView):
             how='inner'
         )
 
-        tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
+        tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url','user_id', 'input_sentence']]
 
         tag_song2vec_results = []
         for index, row in tag_song2vec_final.iterrows():
