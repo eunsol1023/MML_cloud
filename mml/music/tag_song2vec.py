@@ -51,77 +51,78 @@ class tag_song2vec_view(APIView):
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
 
+        # 가사 데이터 불러오기
         processed_lyrics = pd.read_csv('./music/files/processed_lyrics.csv')
 
-        # Merge the dataframes on 'Title' and 'Artist' to find matching songs
+        # 'Title' 및 'Artist'를 사용하여 데이터프레임 병합하여 일치하는 노래 찾기
         matched_songs_df = pd.merge(
             mml_music_info_df, mml_user_his_df,
             on=['title', 'artist'],
             how='inner',
             suffixes=('_all_music', '_user_log')
         )
-
+        
+        # 필요한 음악 데이터 추출
         music_data = matched_songs_df[['user', 'title', 'artist', 'genre_user_log', 'playtime', 'created_at', 'lyrics']]
 
+        # 가사 데이터와 병합
         music_data = music_data.join(processed_lyrics)
 
-        # Input sentence from the user
+        # 사용자로부터의 입력 문장
         input_sentence = request.GET.get('input_sentence', None)
         print("input_sentence의 값 : ", input_sentence)
         print("input_sentence의 타입:", type(input_sentence))
         if not input_sentence:
             return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Tokenizing the sentence
+        # 문장을 토큰화
         tokens = word_tokenize(input_sentence)
 
-        # Removing stopwords (commonly used words that are not useful for keyword extraction)
-        # Note: For Korean, a custom list of stopwords might be needed as nltk's default is for English.
+        # 불용어 제거 (키워드 추출에 유용하지 않은 일반적인 단어)
+        # 참고: 한국어의 경우 nltk의 기본은 영어용이므로 한국어에 맞는 불용어 리스트가 필요할 수 있습니다.
         filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
 
-        filtered_tokens
-
-        # Checking the unique values in the 'Title' column to understand its format
+        # 고유한 'Title' 열의 값을 확인하여 형식을 이해하기
         unique_titles = mml_music_tag_df['title'].unique()
 
-        # Processing the 'Tag' column: Splitting the tags into separate entries
-        # We create a new DataFrame with each tag as a separate entry
+        # 'Tag' 열 처리: 태그를 개별 항목으로 분할하여 새로운 데이터프레임 생성
         tag_data_expanded = mml_music_tag_df.drop('tag', axis=1).join(
             mml_music_tag_df['tag'].str.split('#', expand=True).stack().reset_index(level=1, drop=True).rename('tag')
         )
 
-        # Converting all titles to string
+        # 모든 'Title'을 문자열로 변환
         mml_music_tag_df['title'] = mml_music_tag_df['title'].astype(str)
 
-        # Now, we will process the 'Tag' data for text similarity analysis.
-        # First, we remove empty tags and convert tags to lower case for uniformity
+        # 'Tag' 데이터를 텍스트 유사성 분석을 위해 처리합니다.
+        # 먼저, 빈 태그를 제거하고 태그를 일관성을 유지하기 위해 소문자로 변환합니다.
         tag_data_expanded = tag_data_expanded[tag_data_expanded['tag'].str.strip().ne('')]
         tag_data_expanded['tag'] = tag_data_expanded['tag'].str.lower()
 
-        # Creating a list of unique tags for TF-IDF
+        # TF-IDF를 위한 고유 태그 목록을 생성합니다.
         unique_tags = tag_data_expanded['tag'].unique()
 
-        # Initializing the TF-IDF Vectorizer
+        # TF-IDF 벡터 변환기를 초기화합니다.
         tfidf_vectorizer = TfidfVectorizer()
 
-        # Fitting the vectorizer to the unique tags
+        # 벡터 변환기를 고유 태그에 맞게 피팅합니다.
         tfidf_matrix = tfidf_vectorizer.fit_transform(unique_tags)
 
-        # Updating the input sentence to include multiple keywords
+        # 입력 문장을 여러 키워드를 포함하도록 업데이트합니다.
         input_keywords = filtered_tokens
-        # Vectorizing each keyword separately
+        # 각 키워드를 개별적으로 벡터화합니다.
         input_vectors = [tfidf_vectorizer.transform([keyword]) for keyword in input_keywords]
 
-        # Calculating cosine similarity for each keyword with all tags
+        # 각 키워드와 모든 태그 간의 코사인 유사성을 계산합니다.
         cosine_similarities_keywords = [cosine_similarity(input_vector, tfidf_matrix).flatten() for input_vector in input_vectors]
 
-        # Finding the most similar tag for each keyword
+        # 각 키워드에 대해 가장 유사한 태그를 찾습니다.
         most_similar_tags = [unique_tags[np.argmax(cosine_similarities)] for cosine_similarities in cosine_similarities_keywords]
         similarity_scores = [np.max(cosine_similarities) for cosine_similarities in cosine_similarities_keywords]
-
-        # Creating a dictionary to display results for each keyword
+        print(most_similar_tags)
+        print(similarity_scores)
+        
+        # 각 키워드에 대한 결과를 표시하기 위한 딕셔너리를 생성합니다.
         similarity_results = dict(zip(input_keywords, zip(most_similar_tags, similarity_scores)))
-        similarity_results
 
         # 이전 단계에서 계산한 가장 유사한 태그 사용
         # 예를 들어, 'similarity_results' 딕셔너리에서 태그 추출
@@ -190,7 +191,6 @@ class tag_song2vec_view(APIView):
 
         # 특정 사용자의 상위 3개 장르를 가져옵니다.
         user_specific_top_genres = user_specific_genre_counts.head(5).index.tolist()
-        print(user_specific_top_genres)
 
         # 사용자 상위 장르와 일치하는 노래에 대해 music_total_with_genre 데이터 프레임 필터링
         user_specific_top_genres_songs_df = music_tag_data[music_tag_data['genre'].isin(user_specific_top_genres)]
