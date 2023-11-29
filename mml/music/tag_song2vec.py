@@ -223,23 +223,13 @@ class tag_song2vec_view(APIView):
             on=['title', 'artist'],
             how='inner'
         )
-        
-
-        
         tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
-        tag_song2vec_final['user_id'] = user_id
-        tag_song2vec_final['input_sentence'] = input_sentence
-        
         
         tag_song2vec_results = []
         for index, row in tag_song2vec_final.iterrows():
-            MMLMusicTagHis.objects.create(
-                title=row['title'],
-                artist=row['artist'],
-                image=row['album_image_url'],
-                user_id=user_id,  # 이 값은 어딘가에서 가져와야 함
-                input_sentence=input_sentence  # 이 값은 어딘가에서 가져와야 함
-            )
-
-        # 결과를 JSON 형식으로 반환
-        return Response(tag_song2vec_results, status=status.HTTP_200_OK)
+            result = {
+                'title': row['title'],
+                'artist': row['artist'],
+                'image': row['album_image_url']
+            }
+            tag_song2vec_results.append(result)
