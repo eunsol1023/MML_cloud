@@ -1,30 +1,16 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from .serializers import *
-
 import pandas as pd
 import numpy as np
-
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-
-from konlpy.tag import Okt
-
-
-from scipy.stats import pearsonr
-
 from sqlalchemy import create_engine
-
 from django.apps import apps
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
 from song2vec_data_loader import song2vec_DataLoader
-
 from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
 
@@ -187,10 +173,7 @@ class tag_song2vec_view(APIView):
                     lyrics_vectors.append(np.mean(weighted_vectors, axis=0))
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
-        print('1')
-
         # 사용자별 프로필 벡터를 생성합니다.
-        # user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         # 가사 리스트를 사용하여 가중치 사전을 생성
         weights_dict = get_top_words_weights(user_lyrics)
