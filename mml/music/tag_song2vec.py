@@ -126,7 +126,8 @@ class tag_song2vec_view(APIView):
         # 이전 단계에서 계산한 가장 유사한 태그 사용
         # 예를 들어, 'similarity_results' 딕셔너리에서 태그 추출
         most_similar_tags = [similarity_results[keyword][0] for keyword in input_keywords]
-
+        print(most_similar_tags)
+        
         # 해당 태그를 포함하는 음악 리스트 추출
         music_list = []
         for tag in most_similar_tags:
