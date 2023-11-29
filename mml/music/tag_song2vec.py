@@ -223,9 +223,14 @@ class tag_song2vec_view(APIView):
             on=['title', 'artist'],
             how='inner'
         )
+        
 
-        tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url','user_id', 'input_sentence']]
-
+        
+        tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
+        tag_song2vec_final['user_id'] = user_id
+        tag_song2vec_final['input_sentence'] = input_sentence
+        
+        
         tag_song2vec_results = []
         for index, row in tag_song2vec_final.iterrows():
             MMLMusicTagHis.objects.create(
