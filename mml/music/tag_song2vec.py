@@ -214,7 +214,7 @@ class tag_song2vec_view(APIView):
 
         # 사용자 ID에 대한 노래 추천을 받고 유사도 점수를 포함하여 출력합니다.
         # user_profile_vector_for_similarity = user_profiles[user_id_to_recommend]  # 해당 사용자의 프로필 벡터를 가져옵니다.
-        recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, music_tag_data)
+        recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, music_tag_data, user_id, input_sentence)
         print(recommendations_with_similarity)
 
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
@@ -226,13 +226,14 @@ class tag_song2vec_view(APIView):
 
         tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
 
-        tag_song2vec_results=[]
-
-        for index,row in tag_song2vec_final.iterrows():
+        tag_song2vec_results = []
+        for index, row in tag_song2vec_final.iterrows():
             result = {
                 'title': row['title'],
                 'artist': row['artist'],
-                'image': row['album_image_url']
+                'image': row['album_image_url'],
+                'user_id': user_id,
+                'input_sentence': input_sentence
             }
             tag_song2vec_results.append(result)
 
