@@ -13,6 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from song2vec_data_loader import song2vec_DataLoader
 from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
+from music.models import MMLMusicTagHis
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
@@ -249,15 +250,30 @@ class tag_song2vec_view(APIView):
         )
 
         tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
+        tag_song2vec_final['user_id'] = user_id
+        tag_song2vec_final['input_sentence'] = input_sentence
 
         tag_song2vec_results=[]
 
-        for index,row in tag_song2vec_final.iterrows():
-            result = {
+        # 데이터프레임 순회 및 MMLMusicTagHis 모델에 데이터 저장
+        for index, row in tag_song2vec_final.iterrows():
+            # 결과 리스트에 추가
+            tag_song2vec_results.append({
                 'title': row['title'],
                 'artist': row['artist'],
-                'image': row['album_image_url']
-            }
-            tag_song2vec_results.append(result)
+                'image': row['album_image_url'],
+                'user_id': row['user_id'],
+                'input_sentence': row['input_sentence']
+            })
 
+            # MMLMusicTagHis 모델에 저장
+            MMLMusicTagHis.objects.create(
+                title=row['title'],
+                artist=row['artist'],
+                image=row['album_image_url'],
+                user_id=row['user_id'],
+                input_sentence=row['input_sentence']
+            )
+
+        # JSON 형식으로 응답 반환
         return Response(tag_song2vec_results, status=status.HTTP_200_OK)
