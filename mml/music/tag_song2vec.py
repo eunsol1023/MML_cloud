@@ -109,12 +109,13 @@ class tag_song2vec_view(APIView):
 
         # 입력 문장을 여러 키워드를 포함하도록 업데이트합니다.
         input_keywords = filtered_tokens
+        
         # 각 키워드를 개별적으로 벡터화합니다.
         input_vectors = [tfidf_vectorizer.transform([keyword]) for keyword in input_keywords]
 
         # 각 키워드와 모든 태그 간의 코사인 유사성을 계산합니다.
         cosine_similarities_keywords = [cosine_similarity(input_vector, tfidf_matrix).flatten() for input_vector in input_vectors]
-
+        print(cosine_similarities_keywords)
         # 각 키워드에 대해 가장 유사한 태그를 찾습니다.
         most_similar_tags = [unique_tags[np.argmax(cosine_similarities)] for cosine_similarities in cosine_similarities_keywords]
         similarity_scores = [np.max(cosine_similarities) for cosine_similarities in cosine_similarities_keywords]
