@@ -204,7 +204,7 @@ class tag_song2vec_view(APIView):
 
             # 유사도 점수를 기반으로 상위 N개의 인덱스를 가져옵니다
             top_indices = similarity_scores.argsort()[-top_n:][::-1]
-
+            print(top_indices)
             # 상위 N개의 노래 추천 정보와 유사도 점수를 함께 반환
             recommendations_with_scores = songs_data.iloc[top_indices]
             recommendations_with_scores['similarity'] = similarity_scores[top_indices]
