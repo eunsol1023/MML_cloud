@@ -100,28 +100,35 @@ class tag_song2vec_view(APIView):
         ]
 
         # 각 형태소에 대해 유사한 태그 찾기 및 유사도 순으로 정렬
-        similar_tags_for_morphs = {}
+        similar_tags_for_morphs = set()
         for morph in morphs:
             similar_tags = find_similar_tags(morph, tags)
-            # 유사도 점수에 따라 태그 정렬 (내림차순)
-            similar_tags.sort(key=lambda x: x[1], reverse=True)
-            if similar_tags:
-                similar_tags_for_morphs[morph] = similar_tags[0][0]
+            similar_tags_for_morphs.update(similar_tags)  # 집합에 태그 추가
 
-        # 모든 태그를 포함하는 음악만 필터링
-        similar_mml_music_tag_df = mml_music_tag_df
-        for tag in similar_tags_for_morphs.values():
-            similar_mml_music_tag_df = similar_mml_music_tag_df[similar_mml_music_tag_df['tag'].str.contains(tag)]
+        # 하나라도 태그가 포함된 음악 필터링
+        filtered_music = pd.DataFrame()
+        for tag in similar_tags_for_morphs:
+            matching_songs = mml_music_tag_df[mml_music_tag_df['tag'].str.contains(tag, na=False)]
+            filtered_music = pd.concat([filtered_music, matching_songs], ignore_index=True)
         
+        # 중복 제거
+        filtered_music = filtered_music.drop_duplicates(subset=['title', 'artist'])
+
+        # 필터링된 음악 데이터에 장르 정보 병합
+        music_tag_lowercase = filtered_music[['title', 'artist', 'tag']].copy()
+
+        # 타이틀과 아티스트를 소문자로 변환 (대소문자 구분 없이 병합을 위해)
+        music_tag_lowercase['title'] = music_tag_lowercase['title'].str.lower()
+        music_tag_lowercase['artist'] = music_tag_lowercase['artist'].str.lower()
+
         genre_reference_df = mml_music_info_df[['title', 'artist', 'genre']].copy()
+        genre_reference_df['title'] = genre_reference_df['title'].str.lower()
+        genre_reference_df['artist'] = genre_reference_df['artist'].str.lower()
 
-        # We create a similar lowercase version of Title and Artist in music_tag for a case-insensitive merge
-        music_tag_lowercase = similar_mml_music_tag_df[['title', 'artist', 'tag']].copy()
-
-        # Merge genre into music_tag using lowercase Title and Artist for matching
-        music_tag_data = pd.merge(music_tag_lowercase, genre_reference_df,
-                                        left_on=['title', 'artist'], right_on=['title', 'artist'],
-                                        how='left')
+        # 장르 정보를 필터링된 음악 태그 데이터에 병합
+        music_tag_data_with_genre = pd.merge(music_tag_lowercase, genre_reference_df,
+                                            left_on=['title', 'artist'], right_on=['title', 'artist'],
+                                            how='left')
         
         def get_top_words_weights(lyrics_list, top_n=20):
             # 모든 가사를 하나의 리스트로 결합합니다.
@@ -149,10 +156,7 @@ class tag_song2vec_view(APIView):
                     lyrics_vectors.append(np.mean(weighted_vectors, axis=0))
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
-        print('1')
-
         # 사용자별 프로필 벡터를 생성합니다.
-        # user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         # 가사 리스트를 사용하여 가중치 사전을 생성
         weights_dict = get_top_words_weights(user_lyrics)
@@ -202,12 +206,10 @@ class tag_song2vec_view(APIView):
             return recommendations_with_scores[['title', 'artist', 'tag', 'similarity']]
 
         # 모든 태그 벡터를 하나의 배열로 추출합니다.
-        tag_vectors_matrix = np.array(list(music_tag_data['tag_vector']))
+        tag_vectors_matrix = np.array(list(music_tag_data_with_genre['tag_vector']))
 
         # 사용자 ID에 대한 노래 추천을 받고 유사도 점수를 포함하여 출력합니다.
-        # user_profile_vector_for_similarity = user_profiles[user_id_to_recommend]  # 해당 사용자의 프로필 벡터를 가져옵니다.
-        recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, music_tag_data)
-        recommendations_with_similarity
+        recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, music_tag_data_with_genre)
 
         # Merge the dataframes on 'Title' and 'Artist' to find matching songs
         tag_song2vec_final = pd.merge(
