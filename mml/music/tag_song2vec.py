@@ -32,29 +32,31 @@ class tag_song2vec_view(APIView):
     
         if session_key:
             try:
-                # Retrieve the session object from the database
+                # 데이터베이스에서 세션 객체 검색
                 session = Session.objects.get(session_key=session_key)
-                # Get the decoded session data
+                # 세션 데이터 디코딩
                 session_data = session.get_decoded()
-                # Print the session data
+                # 세션 데이터 출력
                 print("Session Data:", session_data)
                 session_id = session_data.get("_auth_user_id")
-                # Access specific values from the session data
+                # 세션 데이터에서 특정 값 접근
                 user = MMLUserInfo.objects.get(pk=session_id)
                 user_id = str(user)
                 print("User ID from session:", user_id)
                 
-                # Other logic in your view
+                # 여기에 추가 로직
             except Session.DoesNotExist:
                 print("Session with key does not exist")
         else:
             print("Session key does not exist")
+            
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
 
+        # 처리된 가사 데이터를 CSV 파일에서 불러옴
         processed_lyrics = pd.read_csv('./music/files/processed_lyrics.csv')
 
-        # Merge the dataframes on 'Title' and 'Artist' to find matching songs
+        # 'Title'과 'Artist'를 기준으로 데이터프레임 병합하여 일치하는 노래 찾기
         matched_songs_df = pd.merge(
             mml_music_info_df, mml_user_his_df,
             on=['title', 'artist'],
@@ -62,67 +64,67 @@ class tag_song2vec_view(APIView):
             suffixes=('_all_music', '_user_log')
         )
 
+        # 필요한 열만 선택하여 음악 데이터 생성
         music_data = matched_songs_df[['user', 'title', 'artist', 'genre_user_log', 'playtime', 'created_at', 'lyrics']]
 
+        # 처리된 가사 데이터와 음악 데이터 결합
         music_data = music_data.join(processed_lyrics)
 
-        # Input sentence from the user
+        # 사용자로부터 입력받은 문장
         input_sentence = request.GET.get('input_sentence', None)
         print("input_sentence의 값 : ", input_sentence)
         print("input_sentence의 타입:", type(input_sentence))
         if not input_sentence:
             return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Tokenizing the sentence
+        # 문장 토큰화
         tokens = word_tokenize(input_sentence)
 
-        # Removing stopwords (commonly used words that are not useful for keyword extraction)
-        # Note: For Korean, a custom list of stopwords might be needed as nltk's default is for English.
+        # 스탑워드 제거 (키워드 추출에 도움이 되지 않는 일반적으로 사용되는 단어 제거)
+        # 주의: 한국어의 경우 nltk 기본 스탑워드 리스트 대신 맞춤형 스탑워드 리스트가 필요할 수 있음
         filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
 
-        filtered_tokens
-
-        # Checking the unique values in the 'Title' column to understand its format
+        # 'Title' 열의 고유값 확인하여 형식 이해
         unique_titles = mml_music_tag_df['title'].unique()
 
-        # Processing the 'Tag' column: Splitting the tags into separate entries
-        # We create a new DataFrame with each tag as a separate entry
+        # 'Tag' 열 처리: 태그를 별도의 항목으로 분할
+        # 각 태그를 별도의 항목으로 가지는 새로운 DataFrame 생성
         tag_data_expanded = mml_music_tag_df.drop('tag', axis=1).join(
             mml_music_tag_df['tag'].str.split('#', expand=True).stack().reset_index(level=1, drop=True).rename('tag')
         )
 
-        # Converting all titles to string
+        # 모든 타이틀을 문자열로 변환
         mml_music_tag_df['title'] = mml_music_tag_df['title'].astype(str)
 
-        # Now, we will process the 'Tag' data for text similarity analysis.
-        # First, we remove empty tags and convert tags to lower case for uniformity
+        # 'Tag' 데이터를 텍스트 유사도 분석을 위해 처리
+        # 먼저, 빈 태그를 제거하고 태그를 소문자로 변환하여 일관성 유지
         tag_data_expanded = tag_data_expanded[tag_data_expanded['tag'].str.strip().ne('')]
         tag_data_expanded['tag'] = tag_data_expanded['tag'].str.lower()
 
-        # Creating a list of unique tags for TF-IDF
+        # TF-IDF에 사용할 고유 태그 목록 생성
         unique_tags = tag_data_expanded['tag'].unique()
 
-        # Initializing the TF-IDF Vectorizer
+        # TF-IDF 벡터라이저 초기화
         tfidf_vectorizer = TfidfVectorizer()
 
-        # Fitting the vectorizer to the unique tags
+        # 고유 태그에 대해 벡터라이저 적용
         tfidf_matrix = tfidf_vectorizer.fit_transform(unique_tags)
 
-        # Updating the input sentence to include multiple keywords
+        # 입력 문장을 여러 키워드로 업데이트
         input_keywords = filtered_tokens
-        # Vectorizing each keyword separately
+        # 각 키워드 별로 벡터화
         input_vectors = [tfidf_vectorizer.transform([keyword]) for keyword in input_keywords]
 
-        # Calculating cosine similarity for each keyword with all tags
+        # 각 키워드에 대해 모든 태그와의 코사인 유사도 계산
         cosine_similarities_keywords = [cosine_similarity(input_vector, tfidf_matrix).flatten() for input_vector in input_vectors]
 
-        # Finding the most similar tag for each keyword
+        # 각 키워드에 대해 가장 유사한 태그 찾기
         most_similar_tags = [unique_tags[np.argmax(cosine_similarities)] for cosine_similarities in cosine_similarities_keywords]
         similarity_scores = [np.max(cosine_similarities) for cosine_similarities in cosine_similarities_keywords]
-
-        # Creating a dictionary to display results for each keyword
+        print(most_similar_tags)
+        print(similarity_scores)
+        # 각 키워드에 대한 결과를 딕셔너리로 표시
         similarity_results = dict(zip(input_keywords, zip(most_similar_tags, similarity_scores)))
-        similarity_results
 
         # 이전 단계에서 계산한 가장 유사한 태그 사용
         # 예를 들어, 'similarity_results' 딕셔너리에서 태그 추출

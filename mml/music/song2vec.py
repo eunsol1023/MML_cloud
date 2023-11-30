@@ -29,19 +29,19 @@ class song2vec_view(APIView):
 
         if session_key:
             try:
-                # Retrieve the session object from the database
+                # 데이터베이스에서 세션 객체 검색
                 session = Session.objects.get(session_key=session_key)
-                # Get the decoded session data
+                # 세션 데이터 디코딩
                 session_data = session.get_decoded()
-                # Print the session data
+                # 세션 데이터 출력
                 print("Session Data:", session_data)
                 session_id = session_data.get("_auth_user_id")
-                # Access specific values from the session data
+                # 세션 데이터에서 특정 값 접근
                 user = MMLUserInfo.objects.get(pk=session_id)
                 user_id = str(user)
                 print("User ID from session:", user_id)
                 
-                # Other logic in your view
+                # 여기에 추가 로직
             except Session.DoesNotExist:
                 print("Session with key does not exist")
         else:
