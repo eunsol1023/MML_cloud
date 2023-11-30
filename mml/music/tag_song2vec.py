@@ -85,9 +85,14 @@ class tag_song2vec_view(APIView):
                     similar_tags.append((tag, similarity))
             return similar_tags
 
-        # 문장에서 형태소 추출 및 불용어 제거
-        sentence = '봄 아침 산책'
-        morphs = [morph for morph in okt.morphs(sentence) if morph not in stopwords]
+        # 사용자로부터 입력받은 문장
+        input_sentence = request.GET.get('input_sentence', None)
+        print("input_sentence의 값 : ", input_sentence)
+        print("input_sentence의 타입:", type(input_sentence))
+        if not input_sentence:
+            return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        morphs = [morph for morph in okt.morphs(input_sentence) if morph not in stopwords]
 
         # 태그 목록
         tags = [
