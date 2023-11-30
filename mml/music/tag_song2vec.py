@@ -108,31 +108,21 @@ class tag_song2vec_view(APIView):
             if similar_tags:
                 similar_tags_for_morphs[morph] = similar_tags[0][0]
 
-        # # 모든 태그를 포함하는 음악만 필터링
-        # similar_mml_music_tag_df = mml_music_tag_df
-        # for tag in similar_tags_for_morphs.values():
-        #     similar_mml_music_tag_df = similar_mml_music_tag_df[similar_mml_music_tag_df['tag'].str.contains(tag)]
-        
-        # 하나라도 태그가 포함된 음악 필터링
-        filtered_music = pd.DataFrame()
+        # 모든 태그를 포함하는 음악만 필터링
+        similar_mml_music_tag_df = mml_music_tag_df
         for tag in similar_tags_for_morphs.values():
-            filtered_music = filtered_music.append(mml_music_tag_df[mml_music_tag_df['tag'].str.contains(tag)])
-
-        # 중복 제거
-        filtered_music = filtered_music.drop_duplicates()
-
-        # 필터링된 음악에 대한 genre_reference_df 병합
-        music_tag_lowercase = filtered_music[['title', 'artist', 'tag']].copy()
-
-        # 소문자화를 위해 타이틀과 아티스트를 소문자로 변환 (필요한 경우에만)
-        music_tag_lowercase['title'] = music_tag_lowercase['title'].str.lower()
-        music_tag_lowercase['artist'] = music_tag_lowercase['artist'].str.lower()
-
-        # 장르 정보를 포함하는 데이터프레임 생성
+            similar_mml_music_tag_df = similar_mml_music_tag_df[similar_mml_music_tag_df['tag'].str.contains(tag)]
+        
         genre_reference_df = mml_music_info_df[['title', 'artist', 'genre']].copy()
-        genre_reference_df['title'] = genre_reference_df['title'].str.lower()
-        genre_reference_df['artist'] = genre_reference_df['artist'].str.lower()
 
+        # We create a similar lowercase version of Title and Artist in music_tag for a case-insensitive merge
+        music_tag_lowercase = similar_mml_music_tag_df[['title', 'artist', 'tag']].copy()
+
+        # Merge genre into music_tag using lowercase Title and Artist for matching
+        music_tag_data = pd.merge(music_tag_lowercase, genre_reference_df,
+                                        left_on=['title', 'artist'], right_on=['title', 'artist'],
+                                        how='left')
+        
         def get_top_words_weights(lyrics_list, top_n=20):
             # 모든 가사를 하나의 리스트로 결합합니다.
             all_words = [word for lyrics in lyrics_list for word in lyrics]
