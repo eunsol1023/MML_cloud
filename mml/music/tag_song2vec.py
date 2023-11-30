@@ -36,6 +36,14 @@ def vectorize_tags(tags, w2v_model):
             tag_vectors.append(np.mean(tag_word_vectors, axis=0))
     return np.mean(tag_vectors, axis=0) if tag_vectors else np.zeros(w2v_model.vector_size)
 
+# preprocess_tags 함수 정의
+def preprocess_tags(tag_string):
+    # '#' 기호를 기준으로 태그를 분리합니다.
+    tags = tag_string.strip().split('#')
+    # 빈 문자열을 제거합니다.
+    tags = [tag for tag in tags if tag]  # 공백 태그 제거
+    return tags
+
 class tag_song2vec_view(APIView):
     def get(self, request):
         print('==========4번==========')
