@@ -55,25 +55,30 @@ def song_info(request):
     
     
 def tag_song2vec_his(request):
-    # 가장 최근에 사용된 서로 다른 'input_sentence' 두 개를 가져옵니다.
-    recent_sentences = MMLMusicTagHis.objects.order_by('-id').values('input_sentence').distinct()[:2]
+    try:
+        # 가장 최근에 사용된 서로 다른 'input_sentence' 두 개를 가져옵니다.
+        recent_sentences = MMLMusicTagHis.objects.order_by('-id').values('input_sentence').distinct()[:2]
 
-    # 결과를 저장할 리스트
-    results = []
+        # 결과를 저장할 리스트
+        results = []
 
-    # 각 'input_sentence'에 대해 관련된 노래 정보를 가져옵니다.
-    for sentence in recent_sentences:
-        songs = MMLMusicTagHis.objects.filter(
-            input_sentence=sentence['input_sentence']
-        ).order_by('-id')[:2]
+        # 각 'input_sentence'에 대해 관련된 노래 정보를 가져옵니다.
+        for sentence in recent_sentences:
+            songs = MMLMusicTagHis.objects.filter(
+                input_sentence=sentence['input_sentence']
+            ).order_by('-id')[:2]
 
-        for song in songs:
-            results.append({
-                'input_sentence': song.input_sentence,
-                'title': song.title,
-                'artist': song.artist,
-                'image': song.image
-            })
+            for song in songs:
+                results.append({
+                    'input_sentence': song.input_sentence,
+                    'title': song.title,
+                    'artist': song.artist,
+                    'image': song.image
+                })
 
-    # 결과를 JSON 형식으로 반환합니다.
-    return JsonResponse({'results': results})
+        # 결과를 JSON 형식으로 반환합니다. 상태 코드를 200으로 지정합니다.
+        return JsonResponse({'results': results}, status=200)
+
+    except Exception as e:
+        # 서버 내부 오류 처리
+        return JsonResponse({'error': 'Internal Server Error', 'message': str(e)}, status=500)
