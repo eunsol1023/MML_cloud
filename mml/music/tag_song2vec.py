@@ -174,8 +174,11 @@ class tag_song2vec_view(APIView):
             return tags
 
         # 태그 데이터에 전처리 함수를 적용합니다.
-        music_tag_data['processed_tags'] = music_tag_data['tag'].apply(preprocess_tags)
+        music_tag_data_with_genre['processed_tags'] = music_tag_data_with_genre['tag'].apply(preprocess_tags)
 
+        # 태그를 벡터로 변환하는 함수를 적용합니다.
+        music_tag_data_with_genre['tag_vector'] = music_tag_data_with_genre['processed_tags'].apply(lambda tags: vectorize_tags(tags, w2v_model))
+        
         # 태그를 벡터로 변환하는 함수를 정의합니다.
         def vectorize_tags(tags, w2v_model):
             tag_vectors = []
@@ -220,9 +223,9 @@ class tag_song2vec_view(APIView):
 
         tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
 
-        tag_song2vec_results=[]
-
-        for index,row in tag_song2vec_final.iterrows():
+        # 결과 리스트 생성 및 반환
+        tag_song2vec_results = []
+        for index, row in tag_song2vec_final.iterrows():
             result = {
                 'title': row['title'],
                 'artist': row['artist'],
