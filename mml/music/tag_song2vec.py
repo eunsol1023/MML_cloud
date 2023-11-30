@@ -121,10 +121,14 @@ class tag_song2vec_view(APIView):
         similar_tags_for_morphs = set()
         for i, morph in enumerate(morphs):
             similar_tags = find_similar_tags(morph, tags)
+            print(f"Morph '{morph}' - Similar Tags: {similar_tags}")
             for tag in similar_tags:
                 # 가중치는 역순으로 할당 (첫 태그가 가장 높은 가중치)
                 tag_weights[tag] = len(morphs) - i
                 similar_tags_for_morphs.add(tag)
+                
+        # 가중치 할당 결과 출력
+        print("Tag Weights:", tag_weights)
 
         # 하나라도 태그가 포함된 음악 필터링
         filtered_music = pd.DataFrame()
