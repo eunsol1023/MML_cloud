@@ -82,7 +82,7 @@ class tag_song2vec_view(APIView):
             for tag in tag_list:
                 similarity = lev.ratio(word, tag)
                 if similarity >= threshold:
-                    similar_tags.append((tag, similarity))
+                    similar_tags.append(tag)  # 유사도 점수 대신 태그 이름만 추가
             return similar_tags
 
         # 사용자로부터 입력받은 문장
