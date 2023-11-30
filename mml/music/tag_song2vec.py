@@ -27,6 +27,15 @@ mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data
 
 # user_id = 'huigeon'
 
+# vectorize_tags 함수 정의
+def vectorize_tags(tags, w2v_model):
+    tag_vectors = []
+    for tag in tags:
+        tag_word_vectors = [w2v_model.wv[word] for word in tag.split() if word in w2v_model.wv]
+        if tag_word_vectors:
+            tag_vectors.append(np.mean(tag_word_vectors, axis=0))
+    return np.mean(tag_vectors, axis=0) if tag_vectors else np.zeros(w2v_model.vector_size)
+
 class tag_song2vec_view(APIView):
     def get(self, request):
         print('==========4번==========')
@@ -179,15 +188,7 @@ class tag_song2vec_view(APIView):
         # 태그를 벡터로 변환하는 함수를 적용합니다.
         music_tag_data_with_genre['tag_vector'] = music_tag_data_with_genre['processed_tags'].apply(lambda tags: vectorize_tags(tags, w2v_model))
         
-        # 태그를 벡터로 변환하는 함수를 정의합니다.
-        def vectorize_tags(tags, w2v_model):
-            tag_vectors = []
-            for tag in tags:
-                # 태그 내의 각 단어에 대해 벡터를 얻고 평균을 계산합니다.
-                tag_word_vectors = [w2v_model.wv[word] for word in tag.split() if word in w2v_model.wv]
-                if tag_word_vectors:  # 태그가 모델 단어장에 있는 경우에만 평균 벡터를 계산합니다.
-                    tag_vectors.append(np.mean(tag_word_vectors, axis=0))
-            return np.mean(tag_vectors, axis=0) if tag_vectors else np.zeros(w2v_model.vector_size)
+
 
         # 각 태그를 벡터로 변환합니다.
         music_tag_data['tag_vector'] = music_tag_data['processed_tags'].apply(lambda tags: vectorize_tags(tags, w2v_model))
