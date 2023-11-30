@@ -120,7 +120,8 @@ class tag_song2vec_view(APIView):
         similar_tags_for_morphs = set()
         for morph in morphs:
             similar_tags = find_similar_tags(morph, tags)
-            similar_tags_for_morphs.update(similar_tags)  # 집합에 태그 추가
+            similar_tags_for_morphs.update(similar_tags) # 집합에 태그 추가
+            print(similar_tags)
 
         # 하나라도 태그가 포함된 음악 필터링
         filtered_music = pd.DataFrame()
