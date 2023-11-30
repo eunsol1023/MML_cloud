@@ -2,9 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from .serializers import *
-
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
@@ -17,6 +15,8 @@ from django.apps import apps
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from song2vec_data_loader import song2vec_DataLoader
+from django.contrib.sessions.models import Session
+from user.models import MMLUserInfo
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
@@ -25,11 +25,33 @@ song2vec_data_loader = song2vec_DataLoader(engine)
 
 mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data = song2vec_data_loader.song2vec_load_data()
 
-user_id = 'huigeon'
+# user_id = 'huigeon'
 
 class tag_song2vec_view(APIView):
     def get(self, request):
-        print('4번')
+        print('==========4번==========')
+        
+        session_key = request.COOKIES.get("sessionid")
+    
+        if session_key:
+            try:
+                # 데이터베이스에서 세션 객체 검색
+                session = Session.objects.get(session_key=session_key)
+                # 세션 데이터 디코딩
+                session_data = session.get_decoded()
+                # 세션 데이터 출력
+                print("Session Data:", session_data)
+                session_id = session_data.get("_auth_user_id")
+                # 세션 데이터에서 특정 값 접근
+                user = MMLUserInfo.objects.get(pk=session_id)
+                user_id = str(user)
+                print("User ID from session:", user_id)
+                
+                # 여기에 추가 로직
+            except Session.DoesNotExist:
+                print("Session with key does not exist")
+        else:
+            print("Session key does not exist")
 
         # 모델 로드
         w2v_model = apps.get_app_config('music').model
@@ -81,20 +103,30 @@ class tag_song2vec_view(APIView):
             if similar_tags:
                 similar_tags_for_morphs[morph] = similar_tags[0][0]
 
-        # 모든 태그를 포함하는 음악만 필터링
-        similar_mml_music_tag_df = mml_music_tag_df
+        # # 모든 태그를 포함하는 음악만 필터링
+        # similar_mml_music_tag_df = mml_music_tag_df
+        # for tag in similar_tags_for_morphs.values():
+        #     similar_mml_music_tag_df = similar_mml_music_tag_df[similar_mml_music_tag_df['tag'].str.contains(tag)]
+        
+        # 하나라도 태그가 포함된 음악 필터링
+        filtered_music = pd.DataFrame()
         for tag in similar_tags_for_morphs.values():
-            similar_mml_music_tag_df = similar_mml_music_tag_df[similar_mml_music_tag_df['tag'].str.contains(tag)]
+            filtered_music = filtered_music.append(mml_music_tag_df[mml_music_tag_df['tag'].str.contains(tag)])
 
+        # 중복 제거
+        filtered_music = filtered_music.drop_duplicates()
+
+        # 필터링된 음악에 대한 genre_reference_df 병합
+        music_tag_lowercase = filtered_music[['title', 'artist', 'tag']].copy()
+
+        # 소문자화를 위해 타이틀과 아티스트를 소문자로 변환 (필요한 경우에만)
+        music_tag_lowercase['title'] = music_tag_lowercase['title'].str.lower()
+        music_tag_lowercase['artist'] = music_tag_lowercase['artist'].str.lower()
+
+        # 장르 정보를 포함하는 데이터프레임 생성
         genre_reference_df = mml_music_info_df[['title', 'artist', 'genre']].copy()
-
-        # We create a similar lowercase version of Title and Artist in music_tag for a case-insensitive merge
-        music_tag_lowercase = similar_mml_music_tag_df[['title', 'artist', 'tag']].copy()
-
-        # Merge genre into music_tag using lowercase Title and Artist for matching
-        music_tag_data = pd.merge(music_tag_lowercase, genre_reference_df,
-                                        left_on=['title', 'artist'], right_on=['title', 'artist'],
-                                        how='left')
+        genre_reference_df['title'] = genre_reference_df['title'].str.lower()
+        genre_reference_df['artist'] = genre_reference_df['artist'].str.lower()
 
         def get_top_words_weights(lyrics_list, top_n=20):
             # 모든 가사를 하나의 리스트로 결합합니다.
