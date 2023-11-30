@@ -91,7 +91,7 @@ class tag_song2vec_view(APIView):
         okt = Okt()
 
         # 불용어 목록 정의
-        stopwords = set(['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다'])
+        stopwords = set(['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다', '하는'])
 
         def find_similar_tags(word, tag_list, threshold=0.5):
             # 주어진 단어와 태그 목록 사이의 유사한 태그를 찾는 함수
@@ -110,18 +110,21 @@ class tag_song2vec_view(APIView):
             return Response({'error': 'input_sentence가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
         morphs = [morph for morph in okt.morphs(input_sentence) if morph not in stopwords]
-
+        
         # 태그 목록
         tags = [
             "감성적인", "팝송", "밤", "새벽", "카페", "휴식", "명상", "드라이브", "신나는", "가을", "인디", "그루브한", "발라드한", "기분전환", "경쾌한", "여름", "겨울", "힐링", "잔잔한", "연주곡", "재즈", "산책", "여행", "R&B", "사랑", "기쁨", "스트레스", "짜증", "공연", "페스티벌", "봄", "그리움", "일상", "저녁", "이별", "슬픔", "화창한", "힙합", "락", "비", "흐림", "KPOP", "아이돌", "등교", "일렉트로닉", "청량한", "달달한", "운동", "헬스", "오후", "올디스", "페스티벌", "공부", "감각적인", "사무실", "아침", "쌀쌀한", "지치고", "힘들때", "우울할때", "출근", "방안에서", "2010년대", "새벽감성", "편집숍", "매장", "클럽", "파티", "독서", "어쿠스틱한", "선선한", "목소리", "음색", "OST", "술집", "펍", "폭염", "더위", "애절한", "뉴에이지", "일렉트로닉팝", "크리스마스", "클래식", "공연", "라이브", "잠들기전", "몽환적인", "쓸쓸한", "설렘", "심쿵", "미세먼지", "황사", "혼술", "혼밥", "맑음", "강한", "환절기", "소울풀한", "싱숭생숭", "시원한", "외로울때", "울고", "눈", "상쾌한", "EDM", "호텔", "바", "고백", "멘붕", "불안", "썸", "듀엣", "피처링", "섹시한", "1990년대", "트로트", "노래방", "나들이", "소풍", "걸그룹", "2000년대", "2020년대", "리메이크", "하교", "퇴근", "JPOP", "1980년대", "월드뮤직", "1970년대", "보사노바", "뉴에이지", "BGM", "동요", "키즈", "청춘", "결혼", "CCM", "태교", "릴스", "1960년대", "클래식", "답답할때", "10대", "20대", "패션쇼", "뮤지컬", "국악", "합창", "광고"
         ]
 
-        # 각 형태소에 대해 유사한 태그 찾기 및 유사도 순으로 정렬
+        # 각 형태소에 대해 유사한 태그 찾기 및 가중치 할당
+        tag_weights = {}
         similar_tags_for_morphs = set()
-        for morph in morphs:
+        for i, morph in enumerate(morphs):
             similar_tags = find_similar_tags(morph, tags)
-            similar_tags_for_morphs.update(similar_tags) # 집합에 태그 추가
-            print(similar_tags)
+            for tag in similar_tags:
+                # 가중치는 역순으로 할당 (첫 태그가 가장 높은 가중치)
+                tag_weights[tag] = len(morphs) - i
+                similar_tags_for_morphs.add(tag)
 
         # 하나라도 태그가 포함된 음악 필터링
         filtered_music = pd.DataFrame()
@@ -160,26 +163,26 @@ class tag_song2vec_view(APIView):
             weights = {word: freq / top_words.max() for word, freq in top_words.items() if word in unique_words}
             return weights
         
-        # 사용자의 가사 프로필을 만들 때, 가장 흔한 단어에 가중치를 주어 벡터를 계산하는 함수를 수정합니다.
-        def create_weighted_lyrics_profile(lyrics_list, w2v_model, top_words_weights):
+        # 사용자별 프로필 벡터 생성 시 가중치 반영
+        def create_weighted_lyrics_profile(lyrics_list, w2v_model, top_words_weights, tag_weights):
             lyrics_vectors = []
             for lyrics in lyrics_list:
-                # lyrics 벡터의 평균을 계산하기 전에 각 단어에 대한 가중치를 고려합니다.
                 weighted_vectors = []
                 for word in lyrics:
                     if word in w2v_model.wv:
-                        weight = top_words_weights.get(word, 1)  # 여기서 get 메소드를 사용
+                        weight = top_words_weights.get(word, 1) * tag_weights.get(word, 1)
                         weighted_vectors.append(w2v_model.wv[word] * weight)
-                if weighted_vectors:  # 가중치가 적용된 벡터의 평균을 계산합니다.
+                if weighted_vectors:
                     lyrics_vectors.append(np.mean(weighted_vectors, axis=0))
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
+
 
         # 사용자별 프로필 벡터를 생성합니다.
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         # 가사 리스트를 사용하여 가중치 사전을 생성
         weights_dict = get_top_words_weights(user_lyrics)
         # 사용자의 가사 프로필을 생성
-        user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, weights_dict)
+        user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, weights_dict, tag_weights)
         # user_profile_vector = create_lyrics_profile(user_lyrics, w2v_model)
 
         # 태그 데이터에 전처리 함수를 적용합니다.
