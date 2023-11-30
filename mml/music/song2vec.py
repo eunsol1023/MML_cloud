@@ -23,7 +23,7 @@ mml_user_his_df, mml_music_info_df, mml_music_tag_df, music_data, music_tag_data
 class song2vec_view(APIView):
 
     def get(self, request):
-        print('==========3번==========')
+        print('==========Song2vec 함수 실행==========')
         
         session_key = request.COOKIES.get("sessionid")
 
@@ -77,7 +77,6 @@ class song2vec_view(APIView):
             return np.mean(lyrics_vectors, axis=0) if lyrics_vectors else np.zeros(w2v_model.vector_size)
 
         # 사용자별 프로필 벡터를 생성합니다.
-        # user_id = 'QrDM6lLc'
         user_lyrics = music_data[music_data['user'] == user_id]['processed_lyrics']
         # 가사 리스트를 사용하여 가중치 사전을 생성
         weights_dict = get_top_words_weights(user_lyrics)

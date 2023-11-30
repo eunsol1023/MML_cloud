@@ -6,10 +6,8 @@ from .serializers import *
 import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 from konlpy.tag import Okt
 import Levenshtein as lev
-from scipy.stats import pearsonr
 from sqlalchemy import create_engine
 from django.apps import apps
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from song2vec_data_loader import song2vec_DataLoader
 from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
+from music.models import MMLMusicTagHis
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
@@ -46,7 +45,7 @@ def preprocess_tags(tag_string):
 
 class tag_song2vec_view(APIView):
     def get(self, request):
-        print('==========4번==========')
+        print('==========Tag_song2vec 함수 실행==========')
         
         session_key = request.COOKIES.get("sessionid")
     
@@ -217,7 +216,7 @@ class tag_song2vec_view(APIView):
         # 사용자 ID에 대한 노래 추천을 받고 유사도 점수를 포함하여 출력합니다.
         recommendations_with_similarity = recommend_songs_with_similarity(user_profile_vector, tag_vectors_matrix, music_tag_data_with_genre)
 
-        # Merge the dataframes on 'Title' and 'Artist' to find matching songs
+        # 'Title'과 'Artist'를 기준으로 데이터프레임을 병합하여 일치하는 노래 찾기
         tag_song2vec_final = pd.merge(
             mml_music_info_df, recommendations_with_similarity,
             on=['title', 'artist'],
@@ -225,15 +224,30 @@ class tag_song2vec_view(APIView):
         )
 
         tag_song2vec_final = tag_song2vec_final[['title', 'artist', 'album_image_url']]
+        tag_song2vec_final['user_id'] = user_id
+        tag_song2vec_final['input_sentence'] = input_sentence
 
-        # 결과 리스트 생성 및 반환
         tag_song2vec_results = []
+        
+        # 데이터프레임 순회 및 MMLMusicTagHis 모델에 데이터 저장
         for index, row in tag_song2vec_final.iterrows():
-            result = {
+            # 결과 리스트에 추가
+            tag_song2vec_results.append({
                 'title': row['title'],
                 'artist': row['artist'],
-                'image': row['album_image_url']
-            }
-            tag_song2vec_results.append(result)
+                'image': row['album_image_url'],
+                'user_id': row['user_id'],
+                'input_sentence': row['input_sentence']
+            })
 
+            # MMLMusicTagHis 모델에 저장
+            MMLMusicTagHis.objects.create(
+                title=row['title'],
+                artist=row['artist'],
+                image=row['album_image_url'],
+                user_id=row['user_id'],
+                input_sentence=row['input_sentence']
+            )
+
+        # JSON 형식으로 응답 반환
         return Response(tag_song2vec_results, status=status.HTTP_200_OK)

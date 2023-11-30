@@ -21,7 +21,7 @@ mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_load
 
 class user_like_artist_view(APIView):
     def get(self, request):
-        print('==========2번==========')
+        print('==========User_like_artist 실행==========')
         session_key = request.COOKIES.get("sessionid")
     
         if session_key:
@@ -133,7 +133,7 @@ class user_like_artist_view(APIView):
         # 선택된 노래와 아티스트를 데이터프레임으로 변환
         df_selected_songs_with_artists = pd.DataFrame(selected_songs_with_artists, columns=['artist', 'title'])
 
-        # Merge the dataframes on 'Title' and 'Artist' to find matching songs
+        # 'Title'과 'Artist'를 기준으로 데이터프레임을 병합하여 일치하는 노래 찾기
         user_like_artist_final = pd.merge(
             mml_music_info_df, df_selected_songs_with_artists,
             on=['title', 'artist'],
