@@ -181,25 +181,11 @@ class tag_song2vec_view(APIView):
         user_profile_vector = create_weighted_lyrics_profile(user_lyrics, w2v_model, weights_dict)
         # user_profile_vector = create_lyrics_profile(user_lyrics, w2v_model)
 
-
-        # 태그 데이터를 전처리하는 함수를 정의합니다.
-        def preprocess_tags(tag_string):
-            # '#' 기호를 기준으로 태그를 분리합니다.
-            tags = tag_string.strip().split('#')
-            # 빈 문자열을 제거합니다.
-            tags = [tag for tag in tags if tag]  # 공백 태그 제거
-            return tags
-
         # 태그 데이터에 전처리 함수를 적용합니다.
         music_tag_data_with_genre['processed_tags'] = music_tag_data_with_genre['tag'].apply(preprocess_tags)
 
         # 태그를 벡터로 변환하는 함수를 적용합니다.
         music_tag_data_with_genre['tag_vector'] = music_tag_data_with_genre['processed_tags'].apply(lambda tags: vectorize_tags(tags, w2v_model))
-        
-
-
-        # 각 태그를 벡터로 변환합니다.
-        music_tag_data['tag_vector'] = music_tag_data['processed_tags'].apply(lambda tags: vectorize_tags(tags, w2v_model))
 
         # 사용자 프로필 벡터와 모든 태그 벡터 사이의 코사인 유사도를 계산하고 상위 N개의 추천과 함께 유사도를 반환하는 함수
         def recommend_songs_with_similarity(user_profile_vector, tag_vectors, songs_data, top_n=20):
