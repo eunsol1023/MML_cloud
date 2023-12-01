@@ -16,6 +16,10 @@ from song2vec_data_loader import song2vec_DataLoader
 from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
 from music.models import MMLMusicTagHis
+import time
+
+# 코드 시작 부분
+start_time = time.time()
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
@@ -248,6 +252,11 @@ class tag_song2vec_view(APIView):
                 user_id=row['user_id'],
                 input_sentence=row['input_sentence']
             )
+
+        # 코드 끝 부분
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"태그 기반 코드 실행 시간: {execution_time}초")
 
         # JSON 형식으로 응답 반환
         return Response(tag_song2vec_results, status=status.HTTP_200_OK)

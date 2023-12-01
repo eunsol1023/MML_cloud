@@ -9,6 +9,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import random
 from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
+import time
+
+# 코드 시작 부분
+start_time = time.time()
 
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 pd.set_option('mode.chained_assignment', None)
@@ -151,5 +155,9 @@ class user_like_artist_view(APIView):
                 'image': row['album_image_url']
             }
             user_like_artist_results.append(result)
-
+            
+        # 코드 끝 부분
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"선호가수 기반 코드 실행 시간: {execution_time}초")
         return Response(user_like_artist_results, status=status.HTTP_200_OK)
