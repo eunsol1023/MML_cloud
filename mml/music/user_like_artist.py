@@ -124,14 +124,18 @@ class user_like_artist_view(APIView):
         # 아티스트당 최대 노래 수 제한
         MAX_SONGS_PER_ARTIST = 3
 
+        # 아티스트별 랜덤 노래 선택 부분 전에 시드 값을 설정
+        random.seed(123) # 여기서 123은 예시 값이며, 원하는 어떤 정수 값이든 사용할 수 있습니다.
+
         # 각 아티스트별로 최대 노래 수만큼 노래 선택
         limited_songs_with_artists = []
         for artist, songs in artist_songs_dict.items():
             selected_songs = random.sample(songs, min(MAX_SONGS_PER_ARTIST, len(songs)))
             for song in selected_songs:
                 limited_songs_with_artists.append((artist, song))
-
+                
         # 전체 리스트에서 랜덤으로 20곡 선택
+        random.seed(123) # 동일한 시드 값으로 다시 설정
         selected_songs_with_artists = random.sample(limited_songs_with_artists, min(20, len(limited_songs_with_artists)))
 
         # 선택된 노래와 아티스트를 데이터프레임으로 변환
