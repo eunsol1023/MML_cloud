@@ -11,9 +11,6 @@ from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
 import time
 
-# 코드 시작 부분
-start_time = time.time()
-
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 pd.set_option('mode.chained_assignment', None)
 
@@ -26,6 +23,9 @@ mml_music_info_df, mml_artist_gen_df, mml_user_like_artist_df = artist_data_load
 class user_like_artist_view(APIView):
     def get(self, request):
         print('==========User_like_artist 실행==========')
+        # 코드 시작 부분
+        start_time = time.time()
+
         session_key = request.COOKIES.get("sessionid")
     
         if session_key:

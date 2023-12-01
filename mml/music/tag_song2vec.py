@@ -18,9 +18,6 @@ from user.models import MMLUserInfo
 from music.models import MMLMusicTagHis
 import time
 
-# 코드 시작 부분
-start_time = time.time()
-
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 # DataLoader 인스턴스 생성
@@ -50,6 +47,8 @@ def preprocess_tags(tag_string):
 class tag_song2vec_view(APIView):
     def get(self, request):
         print('==========Tag_song2vec 함수 실행==========')
+        # 코드 시작 부분
+        start_time = time.time()
         
         session_key = request.COOKIES.get("sessionid")
     

@@ -13,9 +13,6 @@ from django.contrib.sessions.models import Session
 from user.models import MMLUserInfo
 import time
 
-# 코드 시작 부분
-start_time = time.time()
-
 engine = create_engine('mysql+pymysql://admin:pizza715@mml.cu4cw1rqzfei.ap-northeast-2.rds.amazonaws.com/mml?charset=utf8')
 
 # DataLoader 인스턴스 생성
@@ -28,6 +25,8 @@ class song2vec_view(APIView):
 
     def get(self, request):
         print('==========Song2vec 함수 실행==========')
+        # 코드 시작 부분
+        start_time = time.time()
         
         session_key = request.COOKIES.get("sessionid")
 
